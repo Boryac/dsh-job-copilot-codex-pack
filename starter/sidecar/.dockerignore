@@ -1,0 +1,10 @@
+.cache
+__pycache__
+*.pyc
+.pytest_cache
+tests
+requirements-dev.txt
+Dockerfile
+# 任何 .env 都不进构建上下文：密钥只从运行时环境变量或 compose 的 env_file 注入
+.env
+.env.*

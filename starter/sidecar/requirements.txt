@@ -1,0 +1,11 @@
+# sidecar 运行时依赖（Python 3.11+）
+# 只列 MVP 必需的包；重型依赖（本地 LLM、OCR、模型权重）不进这里，
+# 见 08_ENVIRONMENT.md 第 5 节：跑不起来时按 fallback 解析继续，不阻塞主链路。
+fastapi>=0.110
+uvicorn[standard]>=0.29
+pydantic>=2.6
+# /v1/resume/parse 的 UploadFile 需要它，缺了会在启动时报 multipart 相关错误
+python-multipart>=0.0.9
+# 简历文本抽取：缺失时 text_extract 会降级并写 parsing_notes，不抛未捕获异常
+pypdf>=4.0
+python-docx>=1.1

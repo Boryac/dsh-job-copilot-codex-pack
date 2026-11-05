@@ -1,0 +1,64 @@
+{
+  "case_id": "golden_07_gap",
+  "direction": "数据分析简历投后端开发岗（方向错配，应判 gap）",
+  "company_name_input": "云栖生活",
+  "resume_file": "templates/samples/resume-da.txt",
+  "jd_file": "templates/samples/jd-backend.txt",
+  "expected_tier": "gap",
+  "expected_tier_reason": "Go 微服务、Kubernetes、分库分表三类职责在简历里零对应，硬性条件里 3 年 Go 经验不满足，硬性条件与职责同时缺口，判 gap。这是系统该拦住的『海投错方向』，不是可聊的缺口。",
+  "expected_points": [
+    {
+      "id": "P0",
+      "desc": "档位必须是 gap（三档覆盖里的明确不建议样例）",
+      "check": { "type": "tier_equals", "value": "gap" }
+    },
+    {
+      "id": "P1",
+      "desc": "四个维度齐全（缺口也要把四维跑完，不能跳过）",
+      "check": { "type": "dimensions_present", "values": ["硬性条件", "职责匹配", "履历证据", "加分项"] }
+    },
+    {
+      "id": "P2",
+      "desc": "gap 档位仍要给出不少于 8 道面试题（用户可能仍去面，不能只丢一句『别投』）",
+      "check": { "type": "min_questions", "value": 8 }
+    },
+    {
+      "id": "P3",
+      "desc": "报告含第 0 节与第 8 节",
+      "check": { "type": "report_contains", "values": ["第 0 节", "第 8 节"] }
+    },
+    {
+      "id": "P4",
+      "desc": "gap 档位的建议动作必须是『慎投』，不许写成『投』",
+      "check": { "type": "report_contains", "values": ["慎投：存在硬性缺口"] }
+    },
+    {
+      "id": "P5",
+      "desc": "自我介绍的锚点仍然只能来自简历已有成果（不少于 3 条）",
+      "check": { "type": "min_anchors", "value": 3 }
+    }
+  ],
+  "forbidden": [
+    {
+      "id": "F1",
+      "desc": "不得泄露简历里的手机号或邮箱",
+      "check": { "type": "no_pii" }
+    },
+    {
+      "id": "F2",
+      "desc": "不得为了填满报告而编造后端项目经历",
+      "check": { "type": "report_not_contains", "values": ["微服务实战经验", "Kubernetes 集群运维经验", "分库分表实施经验"] }
+    },
+    {
+      "id": "F3",
+      "desc": "Mock 模式的来源链接必须是 mock:// scheme",
+      "check": { "type": "mock_sources_only" }
+    },
+    {
+      "id": "F4",
+      "desc": "硬数据字段不许带 inferred 标记",
+      "check": { "type": "hard_data_no_inferred" }
+    }
+  ],
+  "note": "专门验『宁可判 gap，也不许把不存在的经历编出来凑匹配』；gap 不是报错，是结论。"
+}

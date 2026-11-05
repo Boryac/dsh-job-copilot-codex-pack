@@ -1,0 +1,19 @@
+# 运行时产物与本地环境，不进仓库
+.env
+.env.*
+.tmp/
+*.log
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+starter/sidecar/.cache/
+
+# Node / 插件构建产物
+node_modules/
+starter/dsh-plugin/dist/
+
+# Agent 工具状态
+.workbuddy/

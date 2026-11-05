@@ -1,0 +1,16 @@
+services:
+  sidecar:
+    build:
+      context: ./sidecar
+      dockerfile: Dockerfile
+    ports:
+      - "${SIDECAR_PORT:-8000}:8000"
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+# 注意：starter/sidecar/Dockerfile 由 Lane B 在 T1.2 时补齐（python:3.11-slim + requirements.txt + uvicorn）。
+# Mock 模式不需要 GPU；本地 SmartResume 模型部署见 08_ENVIRONMENT.md 第 5 节。

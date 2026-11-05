@@ -1,0 +1,94 @@
+{
+  "case_id": "golden_02_da",
+  "direction": "数据分析师（同名公司消歧失败场景）",
+  "company_name_input": "星河数据",
+  "resume_file": "templates/samples/resume-da.txt",
+  "jd_file": "templates/samples/jd-da.txt",
+  "expected_tier": "discussable",
+  "expected_tier_reason": "SQL 与业务分析部分有证据，但 JD 要求的 2 年以上经验不满足；职责匹配可聊。",
+  "expected_points": [
+    {
+      "id": "P0",
+      "desc": "档位必须是 discussable（把档位写成可执行断言，不是只写在说明里）",
+      "check": {
+        "type": "tier_equals",
+        "value": "discussable"
+      }
+    },
+    {
+      "id": "P1",
+      "desc": "四个维度齐全",
+      "check": {
+        "type": "dimensions_present",
+        "values": [
+          "硬性条件",
+          "职责匹配",
+          "履历证据",
+          "加分项"
+        ]
+      }
+    },
+    {
+      "id": "P2",
+      "desc": "面试题不少于 8 道且每题带 evidence_ref",
+      "check": {
+        "type": "min_questions",
+        "value": 8
+      }
+    },
+    {
+      "id": "P3",
+      "desc": "至少一题围绕 SQL / 数据分析能力追问",
+      "check": {
+        "type": "question_mentions",
+        "values": [
+          "SQL",
+          "数据"
+        ]
+      }
+    },
+    {
+      "id": "P4",
+      "desc": "自我介绍的量化锚点不少于 3 条",
+      "check": {
+        "type": "min_anchors",
+        "value": 3
+      }
+    },
+    {
+      "id": "P5",
+      "desc": "公司同名多候选时必须留空并请用户确认，不许随机挑一个当事实",
+      "check": {
+        "type": "company_unresolved"
+      }
+    }
+  ],
+  "forbidden": [
+    {
+      "id": "F1",
+      "desc": "不得泄露简历里的手机号或邮箱",
+      "check": {
+        "type": "no_pii"
+      }
+    },
+    {
+      "id": "F2",
+      "desc": "消歧失败时不许凭空写出公司全称",
+      "check": {
+        "type": "report_not_contains",
+        "values": [
+          "星河数据科技有限公司",
+          "星河数据（福州）有限公司"
+        ]
+      }
+    },
+    {
+      "id": "F3",
+      "desc": "Mock 模式的来源链接必须是 mock:// scheme",
+      "check": {
+        "type": "mock_sources_only"
+      }
+    }
+  ],
+  "note": "专门用来验『宁可留空，不许猜』：mockdata 里星河数据有多个同名候选。"
+}

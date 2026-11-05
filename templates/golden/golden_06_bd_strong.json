@@ -1,0 +1,79 @@
+{
+  "case_id": "golden_06_bd_strong",
+  "direction": "本地生活商务拓展（2027 届校招，不设年限门槛）",
+  "company_name_input": "云栖生活",
+  "resume_file": "templates/samples/resume-bd.txt",
+  "jd_file": "templates/samples/jd-bd-campus.txt",
+  "expected_tier": "strong",
+  "expected_tier_reason": "同一份 BD 简历投校招岗：硬性条件只有本科/2027 届（均满足），职责四条与实习 bullet 一一对应，四维里三维 strong，因此判 strong。与 golden_01（同一简历、JD 要求 1 年经验）形成对照，证明档位不是恒定值。",
+  "expected_points": [
+    {
+      "id": "P0",
+      "desc": "档位必须是 strong（三档覆盖里的强匹配样例）",
+      "check": { "type": "tier_equals", "value": "strong" }
+    },
+    {
+      "id": "P1",
+      "desc": "四个维度齐全，缺任一维等于 rubric 没跑完",
+      "check": { "type": "dimensions_present", "values": ["硬性条件", "职责匹配", "履历证据", "加分项"] }
+    },
+    {
+      "id": "P2",
+      "desc": "面试题不少于 8 道",
+      "check": { "type": "min_questions", "value": 8 }
+    },
+    {
+      "id": "P3",
+      "desc": "至少一道题锚定在简历经历（evidence_ref 以 exp_ 开头）",
+      "check": { "type": "question_ref_prefixes", "values": ["exp_"] }
+    },
+    {
+      "id": "P4",
+      "desc": "自我介绍的量化锚点不少于 3 条",
+      "check": { "type": "min_anchors", "value": 3 }
+    },
+    {
+      "id": "P5",
+      "desc": "报告含第 0 节与第 8 节",
+      "check": { "type": "report_contains", "values": ["第 0 节", "第 8 节"] }
+    },
+    {
+      "id": "P6",
+      "desc": "strong 档位的建议动作应指向『投』，不是『慎投』",
+      "check": { "type": "report_contains", "values": ["投：硬性条件与职责都有直接证据"] }
+    },
+    {
+      "id": "P7",
+      "desc": "公司主体能唯一消歧到云栖生活",
+      "check": { "type": "company_resolved_contains", "value": "云栖" }
+    }
+  ],
+  "forbidden": [
+    {
+      "id": "F1",
+      "desc": "不得泄露简历里的手机号或邮箱",
+      "check": { "type": "no_pii" }
+    },
+    {
+      "id": "F2",
+      "desc": "不得承诺录取结果",
+      "check": { "type": "report_not_contains", "values": ["保证录取", "包过", "百分百通过"] }
+    },
+    {
+      "id": "F3",
+      "desc": "Mock 模式的来源链接必须是 mock:// scheme",
+      "check": { "type": "mock_sources_only" }
+    },
+    {
+      "id": "F4",
+      "desc": "硬数据字段不许带 inferred 标记",
+      "check": { "type": "hard_data_no_inferred" }
+    },
+    {
+      "id": "F5",
+      "desc": "实习生简历不许被写成带团队：题面里出现「管理 10 人」「带团队」即视为证据造假",
+      "check": { "type": "questions_not_contain", "values": ["管理 10 人", "带领 10 人", "带团队"] }
+    }
+  ],
+  "note": "脱敏虚构样例；与 golden_01 共用同一份简历，只换 JD，用来验证档位随 JD 真实变化。"
+}

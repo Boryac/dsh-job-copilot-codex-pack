@@ -1,0 +1,98 @@
+{
+  "case_id": "golden_05_ka",
+  "direction": "本地生活 KA 大客户销售",
+  "company_name_input": "云栖生活",
+  "resume_file": "templates/samples/resume-ka.txt",
+  "jd_file": "templates/samples/jd-ka.txt",
+  "expected_tier": "discussable",
+  "expected_tier_reason": "B 端签约与谈判有量化证据（7 家签约 96 万、成交周期 68→41 天），但其为实习期，JD 要求 1 年以上 B 端销售经验，判可聊。",
+  "expected_points": [
+    {
+      "id": "P0",
+      "desc": "档位必须是 discussable（把档位写成可执行断言，不是只写在说明里）",
+      "check": {
+        "type": "tier_equals",
+        "value": "discussable"
+      }
+    },
+    {
+      "id": "P1",
+      "desc": "四个维度齐全",
+      "check": {
+        "type": "dimensions_present",
+        "values": [
+          "硬性条件",
+          "职责匹配",
+          "履历证据",
+          "加分项"
+        ]
+      }
+    },
+    {
+      "id": "P2",
+      "desc": "面试题不少于 8 道",
+      "check": {
+        "type": "min_questions",
+        "value": 8
+      }
+    },
+    {
+      "id": "P3",
+      "desc": "至少一题追问商务谈判或客户决策链",
+      "check": {
+        "type": "question_mentions",
+        "values": [
+          "谈判",
+          "决策链",
+          "签约"
+        ]
+      }
+    },
+    {
+      "id": "P4",
+      "desc": "自我介绍的量化锚点不少于 3 条",
+      "check": {
+        "type": "min_anchors",
+        "value": 3
+      }
+    },
+    {
+      "id": "P5",
+      "desc": "报告含第 8 节数据来源与置信度",
+      "check": {
+        "type": "report_contains",
+        "values": [
+          "第 8 节"
+        ]
+      }
+    }
+  ],
+  "forbidden": [
+    {
+      "id": "F1",
+      "desc": "不得泄露简历里的手机号或邮箱",
+      "check": {
+        "type": "no_pii"
+      }
+    },
+    {
+      "id": "F2",
+      "desc": "不得承诺录取结果",
+      "check": {
+        "type": "report_not_contains",
+        "values": [
+          "保证录取",
+          "包过"
+        ]
+      }
+    },
+    {
+      "id": "F3",
+      "desc": "硬数据不许带 inferred 标记",
+      "check": {
+        "type": "hard_data_no_inferred"
+      }
+    }
+  ],
+  "note": "第三职业方向（B 端销售），验职责匹配对『谈判类』要求的召回。"
+}

@@ -1,0 +1,86 @@
+{
+  "case_id": "golden_03_pm",
+  "direction": "AI 产品经理（校招，公司完全查不到）",
+  "company_name_input": "未知示例公司",
+  "resume_file": "templates/samples/resume-pm.txt",
+  "jd_file": "templates/samples/jd-pm.txt",
+  "expected_tier": "discussable",
+  "expected_tier_reason": "AI 应用项目经验在加分项里只是部分对应，产品方法论有实习证据，整体可聊。",
+  "expected_points": [
+    {
+      "id": "P0",
+      "desc": "档位必须是 discussable（把档位写成可执行断言，不是只写在说明里）",
+      "check": {
+        "type": "tier_equals",
+        "value": "discussable"
+      }
+    },
+    {
+      "id": "P1",
+      "desc": "四个维度齐全",
+      "check": {
+        "type": "dimensions_present",
+        "values": [
+          "硬性条件",
+          "职责匹配",
+          "履历证据",
+          "加分项"
+        ]
+      }
+    },
+    {
+      "id": "P2",
+      "desc": "面试题不少于 8 道",
+      "check": {
+        "type": "min_questions",
+        "value": 8
+      }
+    },
+    {
+      "id": "P3",
+      "desc": "项目经历也能当证据：锚点允许引用 proj_，不足 3 条时不许编造",
+      "check": {
+        "type": "min_anchors",
+        "value": 3
+      }
+    },
+    {
+      "id": "P4",
+      "desc": "公司完全没有候选时，报告要标『未获取』而不是编一家公司",
+      "check": {
+        "type": "report_contains",
+        "values": [
+          "未获取"
+        ]
+      }
+    }
+  ],
+  "forbidden": [
+    {
+      "id": "F1",
+      "desc": "不得泄露简历里的手机号或邮箱",
+      "check": {
+        "type": "no_pii"
+      }
+    },
+    {
+      "id": "F2",
+      "desc": "查不到的公司不许编工商数据（成立时间/注册资本）",
+      "check": {
+        "type": "report_not_contains",
+        "values": [
+          "未知示例公司科技有限公司",
+          "成立于 20"
+        ]
+      }
+    },
+    {
+      "id": "F3",
+      "desc": "Mock 模式的来源链接必须是 mock:// scheme",
+      "check": {
+        "type": "mock_sources_only"
+      }
+    }
+  ],
+  "note": "验降级路径：公司无候选时整份报告仍要出全，不许空白。"
+}
