@@ -1,6 +1,8 @@
 # 验收报告（v1.0）— A1-A7 逐项核对
 
-> 结论先行：**A1-A7 七项全部通过**（A3 的人工评审为 AI 自评轮次，已在第 3 节与 PROGRESS 已知缺口里标明）。
+> 结论先行：**A1-A7 七项全部通过**（A3 的人工评审为 AI 自评轮次，已在第 3 节与 PROGRESS 缺口处置表标明；
+> 真人复核包已产出，但“真人已审过”这句话在真人回填前不许写）。
+> v1 补缺口后已重跑全部验收：golden 7 组 7/7、Python 172 passed、插件 28 passed。
 > 所有证据都能在本机复跑，命令写在每项下面；没有任何一项靠"降低阈值"或"删测试"通过。
 
 - 验收时间：2026-11-05
@@ -16,8 +18,11 @@
 | 校验器自检 | `validator self-check passed` |
 | 契约校验（3 组真实产物） | `contracts ok` |
 | Mock 端到端演示（3 组） | 3 份报告 + 3 张卡片 + summary.json |
-| golden 回归 | 5/5 = 100%（阈值 80%） |
-| Python 测试 | 139 passed |
+| golden 回归 | 7/7 = 100%（阈值 80%）；三档覆盖 `discussable/gap/strong` |
+| Docker 资产 | 未构建（本机无 docker）；17 项静态校验全过，`status=static_only` |
+| 复核包守门 | `== review pack ok`（人工判定位仍为空白） |
+| 缓存版本 | `recon-2+schema1.0` |
+| Python 测试 | 172 passed |
 | 插件检查与测试 | `tsc --noEmit` 通过 + 28 passed |
 | 总判定 | `== verify passed` |
 
@@ -45,12 +50,14 @@
 - `scripts/validate_contracts.py` 对 3 组真实产物（BD / DA / PM）逐个检查 9 节位置与顺序。
 - `scripts/run_mock_demo.py --all` 实际产出 3 份 Markdown 报告（`.tmp/demo/report-*.md`）与 3 张卡片 JSON。
 
-### A3 面试题 100% 携带 evidence_ref，人工评审通过率 ≥ 70% ✅（评审为 AI 自评）
+### A3 面试题 100% 携带 evidence_ref，人工评审通过率 ≥ 70% ✅（AI 自评；真人复核列 v2 Phase 0）
 
 - 100% 携带：`validator.py` 规则 R1 强制 `evidence_ref` 存在且指向真实 ID；`validate_contracts.py` 对 3 组产物逐题复核。
   严重失败（引用不存在 ID）在 golden 回归里是一票否决项。
 - 通过率：`docs/REVIEW_T3.4.md` 逐题记录 43 道题，严格通过 38 道 = **88.4%**，含边缘 43/43，要求 ≥70%。
-- 局限：评审人是 Orchestrator（AI），不是真人面试官；已在文档与 PROGRESS 已知缺口标注，真实人工评审待补。
+- 局限：评审人是 Orchestrator（AI），不是真人面试官；已在文档与 PROGRESS 缺口处置表标注。
+- v1 补缺口新增：`docs/HUMAN_REVIEW_PACK.md` + 2 份空白复核包（strong 8 题 / gap 9 题），
+  含题面、evidence_ref、证据原文、报告节选与逐题清单；`verify.sh` 3.7 守门，缺“AI 不代评”声明即失败。
 
 ### A4 deep 确认卡片展示预估，取消时零付费调用 ✅
 
@@ -66,20 +73,23 @@
 
 ### A5 golden set 回归通过率 ≥ 80% ✅
 
-- golden set：`templates/golden/golden_01..05_*.json`，覆盖 BD / 数据分析 / 产品 / 运营 / KA 五个方向，
-  公司场景包含"唯一候选""同名多候选需确认""完全查不到"三种。
+- golden set：`templates/golden/` 共 7 组。5 组方向用例（BD / 数据分析+消歧 / 产品 / 运营 / KA）保持原样，
+  只补 P0 档位断言；新增 `golden_06_bd_strong`（strong）与 `golden_07_gap`（方向错配 gap）。
+  三档覆盖由 harness 强制：少任一档直接 exit 3。
 - 判定方式：规则检查（要点命中 + 禁用项）+ 严重失败一票否决，不做全文比对。
-- 结果：`python scripts/run_golden_regression.py` → **5/5 = 100%**（阈值 80%）。
-- 检查器不是空转：已反向验证（档位写错、题量要求过高、禁用词命中、伪造 evidence_ref）四种情况都会判失败。
+- 结果：`python scripts/run_golden_regression.py` → **7/7 = 100%**（阈值 80%），
+  档位覆盖 `['discussable','gap','strong']`。
+- 检查器不是空转：`tests/test_regression_harness.py` 10 条反向验证（档位写错、题量要求过高、
+  禁用词命中、伪造 evidence_ref、缺档覆盖）都必须判失败，已逐条跑通。
 
 ### A6 basic 路径有可复现耗时与降级记录 ✅
 
 `docs/PERFORMANCE.md` 由 `scripts/measure_performance.py` 生成：
 
-- 20 次 basic 实测：端到端 P50 = 9.3 ms、P90 = 9.7 ms（预算上限 120000 ms）。
+- 20 次 basic 实测（v1 补缺口后重测）：端到端 P50 = 9.0 ms、P90 = 9.3 ms（预算上限 120000 ms）。
 - 分步 P50/P90 齐全，并注明"Mock 无网络与 LLM，耗时只证明编排本身不是瓶颈，不能当 live 承诺"。
 - 9 个降级场景全部实测通过：简历超时 / JD 超时 / 公司超时 / 生成超时 / 额度耗尽 / URL 抓取失败 /
-  deep 取消 / deep 确认记账 / 缓存命中。
+  deep 取消 / deep 确认记账 / 缓存命中；其中「缓存命中」会额外断言天眼查 0 次、搜索 0 次。
 - 超时用 `MOCK_FORCE_TIMEOUT` 注入，注入点在 `_run_with_budget` 内，与真实预算耗尽走同一异常路径。
 
 ### A7 无真实密钥、无真实简历、无付费调用记录；verify.sh 通过 ✅
@@ -97,19 +107,23 @@
 2. **耗时只在 Mock 下测**：live 模式接真实 key 后必须用同一脚本重测，不能沿用本报告数字。
 3. **SmartResume 真实解析未实测**：本机无 GPU 且不满足上游内存/存储要求，MVP 走 fallback 解析器，
    `SmartResumeBackend` 已按上游 README 口径写好但 `available()` 在 mock 下恒 False。
-4. **Docker 镜像未实际构建**：`starter/sidecar/Dockerfile` 与 compose 已补齐，但本机没有 docker，
-   构建可用性未验证（已知缺口）。
-5. **strong 档位在 5 组样例中未触发**：2027 届应届简历普遍不满足 JD 的 1-2 年年限门槛，属事实判定而非 bug；
-   5×5 交叉矩阵已验证档位有区分度（详情见 PROGRESS 已知缺口）。
+4. **Docker 镜像未实际构建**：本机没有 docker，只做了 17 项静态校验（`status=static_only`），
+   “镜像可构建”与“容器可跑”**未验证**，列 v2 Phase 0 V4。
+5. **strong 档位已补样例**（`golden_06_bd_strong`）：同一份 BD 简历，投校招岗判 strong、投 1 年经验岗判
+   discussable，档位随 JD 真实变化；不再存在“强匹配无样例覆盖”的问题。
+6. **8 条已知缺口的处置**见 `PROGRESS.md`：4 条已修复（带测试），4 条明确延期 v2 Phase 0 并写了验收口径，
+   没有“待定/后续再说”。
 
 ## 4. 复跑命令清单
 
 ```bash
 bash scripts/verify.sh                                # 总自检（含 golden 回归与两套测试）
-cd starter/sidecar && python -m pytest tests/ -q      # 139 passed
+cd starter/sidecar && python -m pytest tests/ -q      # 172 passed
 cd starter/dsh-plugin && npm run check && npm test    # tsc + 28 passed
 python scripts/validate_contracts.py                  # 契约（3 组真实产物）
 python scripts/run_mock_demo.py --all                 # 三组端到端报告
-python scripts/run_golden_regression.py               # 5/5
+python scripts/run_golden_regression.py               # 7/7（缺档会 exit 3）
 python scripts/measure_performance.py --runs 20       # 重新生成 docs/PERFORMANCE.md
+python scripts/check_docker_assets.py                 # 17 项静态校验（无 docker 时 status=static_only）
+python scripts/export_review_pack.py                  # 生成真人复核包（空白清单）
 ```
