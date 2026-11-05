@@ -19,7 +19,7 @@
 | 最大缺口 | 熟悉 Kubernetes、Docker 与微服务治理（jd_03） |
 | 面试题数量 | 9 道（要求 ≥8） |
 
-导出时间：2026-11-05 11:48
+导出时间：2026-11-05 11:51
 
 ## 2. 四维匹配（只看档位，不看百分比）
 
@@ -416,17 +416,17 @@
 
 | 数据项 | 来源 | 置信度 | 抓取时间 |
 |---|---|---|---|
-| 成立时间 | mock://tianyancha/basic | verified | 2026-11-05T11:48:19+08:00 |
-| 注册资本 | mock://tianyancha/basic | verified | 2026-11-05T11:48:19+08:00 |
-| 法定代表人 | mock://tianyancha/basic | verified | 2026-11-05T11:48:19+08:00 |
-| 经营范围 | mock://tianyancha/basic | verified | 2026-11-05T11:48:19+08:00 |
-| 注册地址 | mock://tianyancha/basic | verified | 2026-11-05T11:48:19+08:00 |
-| 企业状态 | mock://tianyancha/basic | verified | 2026-11-05T11:48:19+08:00 |
-| 软信息（产品/新闻/融资） | mock://yunqi/product | inferred | 2026-11-05T11:48:19+08:00 |
-| 软信息（产品/新闻/融资） | mock://yunqi/merchant-app | inferred | 2026-11-05T11:48:19+08:00 |
-| 软信息（产品/新闻/融资） | mock://yunqi/news/expansion-2026 | inferred | 2026-11-05T11:48:19+08:00 |
-| 软信息（产品/新闻/融资） | mock://yunqi/news/association-2026 | inferred | 2026-11-05T11:48:19+08:00 |
-| 软信息（产品/新闻/融资） | mock://yunqi/financing/a | inferred | 2026-11-05T11:48:19+08:00 |
+| 成立时间 | mock://tianyancha/basic | verified | 2026-11-05T11:51:25+08:00 |
+| 注册资本 | mock://tianyancha/basic | verified | 2026-11-05T11:51:25+08:00 |
+| 法定代表人 | mock://tianyancha/basic | verified | 2026-11-05T11:51:25+08:00 |
+| 经营范围 | mock://tianyancha/basic | verified | 2026-11-05T11:51:25+08:00 |
+| 注册地址 | mock://tianyancha/basic | verified | 2026-11-05T11:51:25+08:00 |
+| 企业状态 | mock://tianyancha/basic | verified | 2026-11-05T11:51:25+08:00 |
+| 软信息（产品/新闻/融资） | mock://yunqi/product | inferred | 2026-11-05T11:51:25+08:00 |
+| 软信息（产品/新闻/融资） | mock://yunqi/merchant-app | inferred | 2026-11-05T11:51:25+08:00 |
+| 软信息（产品/新闻/融资） | mock://yunqi/news/expansion-2026 | inferred | 2026-11-05T11:51:25+08:00 |
+| 软信息（产品/新闻/融资） | mock://yunqi/news/association-2026 | inferred | 2026-11-05T11:51:25+08:00 |
+| 软信息（产品/新闻/融资） | mock://yunqi/financing/a | inferred | 2026-11-05T11:51:25+08:00 |
 | JD 要求 | jd_pasted_text | verified | 未标注 |
 | 简历经历与量化成果 | resume_parse:fallback | inferred | 未标注 |
 

@@ -198,8 +198,10 @@ def main() -> int:
             {
                 "case_id": case_id,
                 "tier": result.structured.verdict.tier,
-                "questions": len(result.structured.interview_questions),
-                "file": str(path.relative_to(PACK)),
+                "questions": [
+                    {"id": q.id, "ref": q.evidence_ref} for q in result.structured.interview_questions
+                ],
+                "file": path.relative_to(PACK).as_posix(),
             }
         )
         print(f"导出 {case_id}：档位={result.structured.verdict.tier}，题数={len(result.structured.interview_questions)} -> {path}")
@@ -217,7 +219,40 @@ def main() -> int:
         "|---|---|---|---|",
     ]
     for item in written:
-        index.append(f"| `{item['case_id']}` | {item['tier']} | {item['questions']} | [{item['file']}]({Path(item['file']).name}) |")
+        index.append(
+            f"| `{item['case_id']}` | {item['tier']} | {len(item['questions'])} | [{item['file']}]({Path(item['file']).name}) |"
+        )
+
+    total = sum(len(item["questions"]) for item in written)
+    index += [
+        "",
+        "## 复核清单（合并版：两组合成一张表，可直接打印）",
+        "",
+        "判定口径：相关性、证据真实性、可追问性三项全通过，该题才算通过。",
+        "",
+        "| 用例 | 题号 | 证据引用 | 相关性 | 证据真实性 | 可追问性 | 判定（通过/不通过） | 问题描述 |",
+        "|---|---|---|---|---|---|---|---|",
+    ]
+    for item in written:
+        for q in item["questions"]:
+            index.append(
+                f"| {item['case_id']} | {q['id']} | `{q['ref']}` | ☐ | ☐ | ☐ |  |  |"
+            )
+    index += [
+        "",
+        f"合计 **{total}** 题（" + " + ".join(f"{item['case_id']} {len(item['questions'])} 题" for item in written) + "）。",
+        "",
+        "| 汇总 | 结果 |",
+        "|---|---|",
+        f"| 题目总数 | {total} |",
+        "| 通过题数 |  |",
+        "| 通过率 |  |（v1 要求 ≥ 70%） |",
+        "| 是否发现证据造假 |  |",
+        "| 是否认可两组档位（strong / gap） |  |",
+        "| 复核人 / 日期 |  |",
+        "",
+        "> 这份合并表只是把两份包里的清单并到一处，便于一次打完；判定仍必须由真人填写。",
+    ]
     index += [
         "",
         "## 复核怎么做（给真人，约 40 分钟）",

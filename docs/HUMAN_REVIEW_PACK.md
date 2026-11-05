@@ -8,8 +8,45 @@
 
 | 用例 | 档位 | 题数 | 文件 |
 |---|---|---|---|
-| `golden_06_bd_strong` | strong | 8 | [docs\review-pack\golden_06_bd_strong.md](golden_06_bd_strong.md) |
-| `golden_07_gap` | gap | 9 | [docs\review-pack\golden_07_gap.md](golden_07_gap.md) |
+| `golden_06_bd_strong` | strong | 8 | [docs/review-pack/golden_06_bd_strong.md](golden_06_bd_strong.md) |
+| `golden_07_gap` | gap | 9 | [docs/review-pack/golden_07_gap.md](golden_07_gap.md) |
+
+## 复核清单（合并版：两组合成一张表，可直接打印）
+
+判定口径：相关性、证据真实性、可追问性三项全通过，该题才算通过。
+
+| 用例 | 题号 | 证据引用 | 相关性 | 证据真实性 | 可追问性 | 判定（通过/不通过） | 问题描述 |
+|---|---|---|---|---|---|---|---|
+| golden_06_bd_strong | q_01 | `jd_01` | ☐ | ☐ | ☐ |  |  |
+| golden_06_bd_strong | q_02 | `exp_01` | ☐ | ☐ | ☐ |  |  |
+| golden_06_bd_strong | q_03 | `exp_01` | ☐ | ☐ | ☐ |  |  |
+| golden_06_bd_strong | q_04 | `exp_01` | ☐ | ☐ | ☐ |  |  |
+| golden_06_bd_strong | q_05 | `exp_01` | ☐ | ☐ | ☐ |  |  |
+| golden_06_bd_strong | q_06 | `jd_03` | ☐ | ☐ | ☐ |  |  |
+| golden_06_bd_strong | q_07 | `jd_07` | ☐ | ☐ | ☐ |  |  |
+| golden_06_bd_strong | q_08 | `jd_08` | ☐ | ☐ | ☐ |  |  |
+| golden_07_gap | q_01 | `jd_02` | ☐ | ☐ | ☐ |  |  |
+| golden_07_gap | q_02 | `jd_01` | ☐ | ☐ | ☐ |  |  |
+| golden_07_gap | q_03 | `exp_01` | ☐ | ☐ | ☐ |  |  |
+| golden_07_gap | q_04 | `exp_01` | ☐ | ☐ | ☐ |  |  |
+| golden_07_gap | q_05 | `exp_01` | ☐ | ☐ | ☐ |  |  |
+| golden_07_gap | q_06 | `jd_03` | ☐ | ☐ | ☐ |  |  |
+| golden_07_gap | q_07 | `jd_04` | ☐ | ☐ | ☐ |  |  |
+| golden_07_gap | q_08 | `jd_05` | ☐ | ☐ | ☐ |  |  |
+| golden_07_gap | q_09 | `jd_08` | ☐ | ☐ | ☐ |  |  |
+
+合计 **17** 题（golden_06_bd_strong 8 题 + golden_07_gap 9 题）。
+
+| 汇总 | 结果 |
+|---|---|
+| 题目总数 | 17 |
+| 通过题数 |  |
+| 通过率 |  |（v1 要求 ≥ 70%） |
+| 是否发现证据造假 |  |
+| 是否认可两组档位（strong / gap） |  |
+| 复核人 / 日期 |  |
+
+> 这份合并表只是把两份包里的清单并到一处，便于一次打完；判定仍必须由真人填写。
 
 ## 复核怎么做（给真人，约 40 分钟）
 
