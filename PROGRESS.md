@@ -134,7 +134,7 @@
 | 上一个基线 | `e7478a7`（v1 补缺口：8 条闭环 + 三档 golden + 缓存版本绑定） |
 | 首个入库提交 | `9842df9`（本包此前不是 git 仓库，本包初始化时补 `.gitignore`） |
 | 分支 | `main`（**未配置 remote**，因此 CI 一次未跑） |
-| 入库文件数 | 140（已确认无 `.env`、无 `.cache`、无 `node_modules`、无 `.tmp`、无模型权重） |
+| 入库文件数 | 135（已确认无 `.env`、无 `.cache`、无 `node_modules`、无 `.tmp`、无模型权重） |
 | 缓存版本号 | `recon-2+schema1.0`（`app/version.py`；key 与 payload 双重绑定，未变） |
 | golden set | 7 组，通过 7/7 = **100%**（阈值 80%）；三档覆盖 `['discussable', 'gap', 'strong']` |
 | Python 测试 | **180 passed**（139 → 172 → 180；本轮 +8：费用上限 5、真实映射 2、空壳降级 1） |
