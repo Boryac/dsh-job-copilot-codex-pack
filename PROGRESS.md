@@ -14,6 +14,7 @@
 - [x] M2（第 2 周）：输入简历 + JD + 公司名，产出可读报告，公司信息分区正确
 - [x] M3（第 3 周，评审为 AI 自评轮次）：面试题人工评审通过率 ≥ 70%
 - [x] M4（第 4 周）：回归通过率 ≥ 80%，验收 A1-A7 全部通过
+- [x] v1 补缺口（第 5 周）：缓存绑版本 / 三档 golden 覆盖 / Docker 与 SmartResume 可行性结论 / 8 条已知缺口逐条闭环 / 真人复核包
 
 ## 任务状态（对照 07_TASK_PLAN.md 更新，状态词：todo / doing / done / blocked）
 
@@ -21,25 +22,25 @@
 |---|---|---|---|---|
 | T1.1 锁定 fork 仓库 | E | done | `docs/FORK_LOCK.md`（gs ls-remote + LICENSE 正文校验） | 锁定 SmartResume(Apache-2.0) + Resume-Matcher(Apache-2.0)，不 fork 全仓 |
 | T1.2 sidecar 骨架 | B | done | `pytest tests/test_api.py` 13 passed；`/health` 与 9 个路由 | FastAPI + Pydantic v2，`ToolError` 统一错误契约 |
-| T1.3 SmartResume 封装 | B | done（限制项见备注） | `pytest tests/test_resume_parser.py` 13 passed | `SmartResumeBackend` 已按上游 README 口径写好但 `available()` 在 mock 下恒 False；真实解析效果仍"待核实"（无 GPU），链路走 fallback 解析器 |
+| T1.3 SmartResume 封装 | B | done（本地模型延期 v2 Phase 0） | `pytest tests/test_resume_parser.py` 17 passed：新增降级原因声明、硬件要求未实测标记、DOCX 经历+指标 | `available()` 改为由 `unavailable_reason()` 单点决定，原因写进 `parsing_notes`；GPU 要求见 `docs/ENV_FEASIBILITY.md` |
 | T1.4 resume-structurer 插件 | A | done | `npm test` 中 tools.test.ts 4 条；`npm run check` 通过 | 30s 预算、首次超时收窄字段重试一次、两次超时给"改文本版"提示 |
 | T1.5 jd-decoder 插件 | A | done | tools.test.ts 中 3 条 | 粘贴文本主路径；URL 仅辅助；无输入要求补文本且零调用 |
 | T1.6 契约测试 | E | done | `scripts/validate_contracts.py` 对 3 组真实产物重跑 Pydantic 校验（含 ID 体系/引用存在性/四维/9 节/卡片字段）；Python `test_contracts.py` 17 passed；TS contracts.test.ts 6 条 | 产物层用同一份模型 `model_validate`，字段放宽成 Any 也会被抓 |
-| T2.1 company-recon basic | C | done | `pytest tests/test_company_recon.py` 14 passed | 消歧 + 工商硬数据 + 搜索软信息 + 7 天缓存 + 记账 |
+| T2.1 company-recon basic | C | done | `pytest tests/test_company_recon.py` 14 passed + `tests/test_cache_versioning.py` 11 passed | 消歧 + 硬数据 + 软信息 + 7 天缓存 + 记账；缓存 key 绑定 `recon-2+schema1.0` 与 `data_mode` |
 | T2.2 orchestrator 编排 | D | done | `pytest tests/test_api.py` 端到端用例 | 分阶段预算 + 超时降级 + `EVIDENCE_INVALID` 修复一次 |
 | T2.3 报告生成器 | D | done | `pytest tests/test_report.py` 13 passed | 9 节结构 + 结论先行 + Markdown 导出 |
 | T2.4 DSH 摘要卡片 | A | done | cards.test.ts 5 条；Python `render_summary_card` 同源字段 | 只放第 0 节摘要 + 锚点 + 导出文件名，不做全文渲染 |
 | T2.5 Mock 端到端演示 | E | done | `python scripts/run_mock_demo.py --all` 产出 3 份报告 + 3 张卡片 + summary.json；verify.sh 第 3 步调用 | 已改为走真实 `run_analysis` 编排，不再硬编码报告文本 |
 | T3.1 证据校验器完整版 | E | done | `pytest tests/test_validator.py` 20 passed | R1-R7 七条规则；生成失败重生成一次仍不过则降级并进待核实清单 |
-| T3.2 面试题生成重构 | D | done | `pytest tests/test_generate.py` 11 passed | 四类保底各 1 题、单条证据上限 4 题、8 题下限、recall 口径相关性过滤 |
-| T3.3 匹配基线 | D | done | `pytest tests/test_matching.py` 10 passed | 四维 rubric 只给档位；门槛类（学历/年限）按事实判定，不当亮点 |
-| T3.4 人工评审 5 组 | E | done（限制项见备注） | `docs/REVIEW_T3.4.md`：43 题逐题记录，严格通过 38 道 = 88.4%（要求 ≥70%） | 评审人是 Orchestrator（AI）不是真人面试官；本轮据此修掉 6 个真实缺陷，真人复核仍待补 |
+| T3.2 面试题生成重构 | D | done | `pytest tests/test_generate.py` 16 passed | 四类保底各 1 题、单条证据上限 4 题、8 题下限、recall 过滤；能力类按证据分流、深挖题三组句式变体 |
+| T3.3 匹配基线 | D | done | `pytest tests/test_matching.py` 13 passed | 四维只给档位；门槛类按事实判定；新增管理层级守卫（实习生不因"搭建/团队"词重合被判管理强项） |
+| T3.4 人工评审 5 组 | E | done（AI 自评，真人复核延期 v2 Phase 0） | `docs/REVIEW_T3.4.md` 43 题逐题记录 88.4%；新增 `docs/HUMAN_REVIEW_PACK.md` + 2 份空白复核包（strong / gap） | 复核包只摊材料留空位，verify 守门禁止 AI 代填；真人打分列入 v2 Phase 0 |
 | T3.5 知识点分级 | D | done | `pytest tests/test_generate.py` 知识点用例 | 三档 + 门槛类排除 + 无例证标注"通用知识、无简历例证" |
 | T4.1 deep 预估卡片（Mock） | C | done | `pytest tests/test_company_recon.py` 预估/缓存用例；TS tools.test.ts 2 条 | 预估零调用、未确认不触 recon、确认后按接口记账 |
-| T4.2 golden set | E | done | `templates/golden/golden_01..05_*.json`（5 组，覆盖 BD/DA/PM/运营/KA） | 期望要点写成可执行 check，不做全文比对 |
-| T4.3 回归与修复 | E | done | `python scripts/run_golden_regression.py` → 5/5 = 100%（阈值 80%）；检查器已做反向验证 | 严重失败（证据造假/付费误调用/隐私泄露）一票否决该组 |
-| T4.4 超时与降级实测 | A/B | done | `docs/PERFORMANCE.md`：basic 20 次实测 P50=9.3ms / P90=9.7ms；9 个降级场景全部实测通过 | 超时用 `MOCK_FORCE_TIMEOUT` 注入，走真实降级分支 |
-| T4.5 验收报告 | E | done | `docs/ACCEPTANCE_REPORT.md`：A1-A7 全过，每项带复跑命令 | A3 标注为 AI 自评，局限单列一节，不藏 |
+| T4.2 golden set | E | done | `templates/golden/` 共 7 组：BD/DA+消歧/PM/运营/KA + strong（校招 BD）+ gap（方向错配） | 5 组既有用例一条未改（仅补 P0 档位断言）；新增 2 组而非 1 组，因为 6 组内无法三档全覆盖 |
+| T4.3 回归与修复 | E | done | `python scripts/run_golden_regression.py` → 7/7 = 100%；三档覆盖 harness 强制（缺档 exit 3）；反向验证 10 条（`tests/test_regression_harness.py`） | 严重失败一票否决该组；档位写错/伪造 evidence_ref 均已证明会判失败 |
+| T4.4 超时与降级实测 | A/B | done | `docs/PERFORMANCE.md`（v1 补缺口后重测）：basic 20 次 P50=9.0ms / P90=9.3ms；9 个降级场景全部通过，新增第 10 个「缓存命中零调用」 | Mock 数字只证明编排不是瓶颈，live 重测列入 v2 Phase 0 |
+| T4.5 验收报告 | E | done | `docs/ACCEPTANCE_REPORT.md`：A1-A7 全过 + v1 补缺口复验记录（A5 改 7/7、A6 新数字、A3 复核包） | A3 仍标注 AI 自评，真人复核延期 v2 Phase 0，不藏 |
 
 ## Decisions（问题 | 方案 | 为什么 | 影响范围）
 
@@ -57,22 +58,46 @@
 - 2026-11-05 | golden 回归第一版 5/5 通过，但检查器可能空转 | 做反向验证：档位写错/题量要求过高/禁用词命中/伪造 evidence_ref 四种都必须判失败 | 不会失败的回归测试等于没有；验证结果四种全部判失败 | Lane E；`scripts/run_golden_regression.py` |
 - 2026-11-05 | golden case 期望档位全部是 discussable | 保留事实判定，不改阈值；另跑 5×5 交叉矩阵记录区分度（错配组合判 gap） | 应届简历普遍不满足 1-2 年门槛，判 gap 是对的；矩阵证明档位不是恒定值 | Lane D/E；已知缺口记录 strong 未触发 |
 
+- 2026-11-05 | 缓存不绑版本，改代码后旧结果仍被读出（8 号缺口） | `app/version.py` 定义 `COMPANY_CACHE_VERSION = recon-2+schema1.0`；key 与 payload 双重校验，版本不符即删文件；key 另加 `data_mode` | 只删缓存是运维动作、不是工程约束；写进 key 与 payload 才能让"改了逻辑但结果没变"在结构上不可能发生。`data_mode` 防止 live 读到 mock 期间写下的 `mock://` 来源 | Lane C/E；`app/recon/cache.py`、`service.py`、`tests/test_cache_versioning.py` |
+- 2026-11-05 | golden 只加 1 组 strong 时，6 组内凑不齐三档（5 组既有用例全是 discussable） | 新增 2 组：`golden_06_bd_strong`（strong）+ `golden_07_gap`（方向错配 gap），5 组既有用例一条未改，只补 P0 档位断言 | 「6 组」与「三档覆盖」在现有 5 组内容下无法同时成立；改既有用例的 JD 会破坏历史证据，扩到 7 组损失最小，且"至少 1 组"允许更多 | Lane E；回归 7/7 |
+- 2026-11-05 | 做 gap 样例时发现「搭建并管理 10 人团队」被判 strong，证据是实习生的「搭建留存看板」 | 加 `leadership_level_mismatch()`：JD 要求管理/带队、证据无带队词时，档位最高只到 discussable | 这是把关键词重合当事实（06 第 3 节禁止）；属于收紧证据口径，不是放宽，也不改阈值 | Lane D；`tests/test_matching.py` 3 条 |
+- 2026-11-05 | 能力类（岗位认知）题一律问「你理解这个要求是什么样」，简历明明有证据 | 按 `best_exp_id` 分流：有证据问"怎么把这段讲成对应能力"，无证据才问理解类问题 | 断言"已有证据还问有没有"就是没读简历，与加分项类同一条问题（REVIEW_T3.4 问题 6 的同类遗漏） | Lane D；`tests/test_generate.py` 2 条 |
+- 2026-11-05 | 经历深挖三题对任何简历都是同一套骨架 | 三类各 3 个变体池，按证据哈希稳定取变体；修掉 `digest[:8]` 取模偏置（10 条里 9 条落在同一变体） | 固定句式长期会被候选人摸到规律；偏置会让"变体"名存实亡，改完整摘要取模后 7 组用例出现 8 种题型 | Lane D；`tests/test_generate.py` 3 条 |
+- 2026-11-05 | 本机无 docker，Docker 缺口怎么处置 | 只做静态校验（`scripts/check_docker_assets.py`，17 项），输出 `status=static_only` 并明写"未构建"；构建验证延期 v2 Phase 0 | 红线路 6：状态词只写已核实的部分。"静态资产无缺陷"与"镜像可构建"是两件事，不许混写 | Lane B/E；`docs/ENV_FEASIBILITY.md` |
+- 2026-11-05 | SmartResume 无 GPU 无法实测 | `SmartResumeBackend.HARDWARE_MIN` 记录 ≥8GB 内存 / ≥10GB 存储 / CUDA 建议，`verified=False`；`unavailable_reason()` 把原因写进 `parsing_notes` | 让"为什么走 fallback"在报告里可查，避免把规则解析说成模型能力；本地模型效果列 v2 Phase 0 | Lane B；`tests/test_resume_parser.py` 4 条 |
+- 2026-11-05 | 报告在无强项时写「最大亮点：无直接量化证据支撑的强项」，自相矛盾 | 文案改为「无明显亮点（仅门槛类条件满足，需面试验证）」，并同步测试守卫 | 复核包要给人读，自相矛盾的句子会被当成系统在敷衍 | Lane D；`matching.py`、`test_matching.py` |
+- 2026-11-05 | 本包此前不是 git 仓库，无法给出基线 commit | 补 `.gitignore`（排除 `.env`/`.cache`/`.tmp`/`node_modules`/`dist`/`.workbuddy`）后 `git init` + 首个提交 | 进 v2 需要一个可回滚的基线；118 个文件入库，已确认无缓存、无 `.env`、无 `node_modules` | 全 Lane；基线见文末快照 |
+- 2026-11-05 | 真人复核包容易被 AI 顺手"代填"成已审 | 只导出材料 + 空白清单，并在 `verify.sh` 加守门：缺"AI 没有、也不能代替真人"声明即失败 | 缺口 1 的本质是"AI 不能自证人工评审"，守门把这条约束写进自动化，而不是靠自觉 | Lane E；`scripts/export_review_pack.py`、`verify.sh` 3.7 |
+
 ## Blockers（现象 | 复现步骤 | 已试方案 | 影响范围 | 状态）
 
 - （无。出现 Blocker 时按 00 的 3 轮规则处理，不改阈值、不删测试）
 
-## 已知缺口（完成时仍存在的 P1/P2，写清楚，不藏起来）
+## v1 已知缺口处置（8 条逐条闭环，无「待定」）
 
-- P1｜A3 的人工评审是 AI 自评（Orchestrator），不是真人面试官。已发现并修复 6 个结构性缺陷，
-  但"真人会不会觉得问题自然"无法由 AI 代证。补法：找 1-2 位做招聘/业务的人按 `docs/REVIEW_T3.4.md` 的表格重评一轮。
-- P1｜性能只在 Mock 下实测（P50 9.3ms / P90 9.7ms）。Mock 没有网络往返与 LLM 推理，不能当 live 承诺。
-  补法：接真实 key 后跑 `python scripts/measure_performance.py --runs 20` 重测并覆盖 `docs/PERFORMANCE.md`。
-- P1｜SmartResume 真实解析未实测（本机无 GPU，且不满足上游 ≥8GB 内存 / ≥10GB 存储要求）。
-  当前走 fallback 解析器，`SmartResumeBackend` 已按上游 README 口径写好但 `available()` 在 mock 下恒 False。
-- P2｜Docker 镜像未实际构建：`starter/sidecar/Dockerfile` + `docker-compose.yml` 已补齐，但本机无 docker，构建可用性未验证。
-- P2｜strong 档位在 5 组 golden 样例中从未触发：2027 届应届简历普遍不满足 JD 的 1-2 年年限门槛，属事实判定；
-  但"强匹配"这一档目前没有样例覆盖，无法证明它可被触发。
-- P2｜能力类（岗位认知）题目未按"简历是否已有证据"分流，加分项类已修，能力类仍是统一句式（REVIEW_T3.4 P2-1）。
-- P2｜经历深挖三题句式模板化（主 bullet / 口径 / 复盘），换简历不变体，长期会被候选人摸到规律（REVIEW_T3.4 P2-3）。
-- P2｜`companies` 缓存与代码版本未绑定：改了硬数据来源标注后，旧缓存仍会被读出来（本次实测踩到过），
-  需要手动清 `starter/sidecar/.cache/company`。补法：缓存 key 加 schema/实现版本号。
+判定口径：每条只能是「已修复 + 测试证据」或「明确延期 v2 Phase 0 + 理由」，不允许第三种状态。
+
+| # | 原缺口 | 处置 | 测试 / 证据 |
+|---|---|---|---|
+| 1 | A3 人工评审是 AI 自评 | **延期 v2 Phase 0**：AI 不能自证真人评审 | 前置件已产出：`docs/HUMAN_REVIEW_PACK.md` + `docs/review-pack/golden_06_bd_strong.md`（strong，8 题）+ `golden_07_gap.md`（gap，9 题），含题面/evidence_ref/证据原文/报告节选/空白清单；`verify.sh` 3.7 守门禁止代填 |
+| 2 | 性能只在 Mock 下实测 | **延期 v2 Phase 0**：需真实 key，v1 红线禁止调用真实付费接口 | `docs/PERFORMANCE.md`：P50 9.0ms / P90 9.3ms，仅证明编排不是瓶颈；文档已删掉"live 也这么快"的暗示 |
+| 3 | SmartResume 真实解析未实测 | **延期 v2 Phase 0**（fallback 路径已测） | 无 GPU 且不满足 ≥8GB/≥10GB；`HARDWARE_MIN.verified=False`；`tests/test_resume_parser.py` 17 passed（含 DOCX 经历+指标、降级原因）；验证步骤见 `docs/ENV_FEASIBILITY.md` 3.2 |
+| 4 | Docker 镜像未构建 | **延期 v2 Phase 0**（静态校验已完成） | 本机无 docker；`scripts/check_docker_assets.py` 17 项全过、`status=static_only`；`docs/ENV_FEASIBILITY.md` 2.2 明列未执行项 |
+| 5 | strong 档位无样例覆盖 | **已修复** | `golden_06_bd_strong` + `jd-bd-campus.txt`；另补 `golden_07_gap` + `jd-backend.txt`；回归 7/7 = 100%，harness 强制三档覆盖（缺档 exit 3）；`tests/test_regression_harness.py` 10 条 |
+| 6 | 能力类题目未按证据分流 | **已修复** | `generate.py` 能力类分支按 `best_exp_id` 分流；`test_ability_question_uses_evidence_when_resume_has_it`、`test_ability_question_falls_back_when_no_evidence` |
+| 7 | 经历深挖句式模板化 | **已修复** | 三组变体池 + 证据哈希稳定取变体；`test_dig_question_wording_varies_across_resumes`（≥2 主变体 / ≥5 题型）、`test_dig_variants_are_deterministic` |
+| 8 | 缓存未绑版本 | **已修复** | `COMPANY_CACHE_VERSION = recon-2+schema1.0`；key + payload 双重校验、旧文件自动删除；`tests/test_cache_versioning.py` 11 条（含"版本递增后必不复用旧结果"「缓存命中零付费调用」） |
+
+顺带修掉的两个新发现（不属原 8 条，一并记录）：
+
+- 管理层级假阳性：「搭建并管理 10 人团队」曾把实习生的「搭建留存看板」判成 strong → 加 `leadership_level_mismatch()` 守卫，档位最高 discussable（3 条测试）。
+- 报告自相矛盾：无强项时写「最大亮点：无直接量化证据支撑的强项」→ 改为「无明显亮点（仅门槛类条件满足）」（1 条测试守卫）。
+
+## v2 Phase 0 待验证项（进 v2 前必须做完，做完才可改状态）
+
+| # | 项 | 验收口径 | 负责 |
+|---|---|---|---|
+| V1 | 真人复核（对应缺口 1） | 1-2 位招聘/业务同事按 `docs/HUMAN_REVIEW_PACK.md` 回填两份复核表，通过率 ≥70%，无证据造假；回填后更新本文件与 `docs/REVIEW_T3.4.md` | Lane E |
+| V2 | live 性能（对应缺口 2） | 接真实 key 后 `python scripts/measure_performance.py --runs 20` 重测，覆盖 `docs/PERFORMANCE.md`；P90 仍须 ≤120s | Lane A/B |
+| V3 | SmartResume 本地模型（对应缺口 3） | 满足 ≥8GB 内存/≥10GB 存储/可选 CUDA 的机器上跑 5 份脱敏简历，记录字段准确率并复核 `_normalize()` 映射；不达标就关掉该路径 | Lane B |
+| V4 | Docker 构建（对应缺口 4） | `docker build` 成功 + 容器内 `/health` 200 + 容器内 Mock demo 产出报告；把 `check_docker_assets.py` 的 `status` 从 `static_only` 改为 `built` | Lane B |
