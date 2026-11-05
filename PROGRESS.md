@@ -22,7 +22,7 @@
 |---|---|---|---|---|
 | T1.1 锁定 fork 仓库 | E | done | `docs/FORK_LOCK.md`（gs ls-remote + LICENSE 正文校验） | 锁定 SmartResume(Apache-2.0) + Resume-Matcher(Apache-2.0)，不 fork 全仓 |
 | T1.2 sidecar 骨架 | B | done | `pytest tests/test_api.py` 13 passed；`/health` 与 9 个路由 | FastAPI + Pydantic v2，`ToolError` 统一错误契约 |
-| T1.3 SmartResume 封装 | B | done（本地模型延期 v2 Phase 0） | `pytest tests/test_resume_parser.py` 17 passed：新增降级原因声明、硬件要求未实测标记、DOCX 经历+指标 | `available()` 改为由 `unavailable_reason()` 单点决定，原因写进 `parsing_notes`；GPU 要求见 `docs/ENV_FEASIBILITY.md` |
+| T1.3 SmartResume 封装 | B | done（本地模型已实证，默认仍走 fallback） | `pytest tests/test_resume_parser.py` 20 passed；真实推理见 `docs/proof/smartresume-cpu.json` / `-gpu.json` | 映射按上游驼峰契约重写；空壳降级守卫；`HARDWARE_MIN.verified=True` 并带实测区间 |
 | T1.4 resume-structurer 插件 | A | done | `npm test` 中 tools.test.ts 4 条；`npm run check` 通过 | 30s 预算、首次超时收窄字段重试一次、两次超时给"改文本版"提示 |
 | T1.5 jd-decoder 插件 | A | done | tools.test.ts 中 3 条 | 粘贴文本主路径；URL 仅辅助；无输入要求补文本且零调用 |
 | T1.6 契约测试 | E | done | `scripts/validate_contracts.py` 对 3 组真实产物重跑 Pydantic 校验（含 ID 体系/引用存在性/四维/9 节/卡片字段）；Python `test_contracts.py` 17 passed；TS contracts.test.ts 6 条 | 产物层用同一份模型 `model_validate`，字段放宽成 Any 也会被抓 |
@@ -39,7 +39,7 @@
 | T4.1 deep 预估卡片（Mock） | C | done | `pytest tests/test_company_recon.py` 预估/缓存用例；TS tools.test.ts 2 条 | 预估零调用、未确认不触 recon、确认后按接口记账 |
 | T4.2 golden set | E | done | `templates/golden/` 共 7 组：BD/DA+消歧/PM/运营/KA + strong（校招 BD）+ gap（方向错配） | 5 组既有用例一条未改（仅补 P0 档位断言）；新增 2 组而非 1 组，因为 6 组内无法三档全覆盖 |
 | T4.3 回归与修复 | E | done | `python scripts/run_golden_regression.py` → 7/7 = 100%；三档覆盖 harness 强制（缺档 exit 3）；反向验证 10 条（`tests/test_regression_harness.py`） | 严重失败一票否决该组；档位写错/伪造 evidence_ref 均已证明会判失败 |
-| T4.4 超时与降级实测 | A/B | done | `docs/PERFORMANCE.md`（v1 补缺口后重测）：basic 20 次 P50=9.0ms / P90=9.3ms；9 个降级场景全部通过，新增第 10 个「缓存命中零调用」 | Mock 数字只证明编排不是瓶颈，live 重测列入 v2 Phase 0 |
+| T4.4 超时与降级实测 | A/B | done（live 时延未实证） | `docs/PERFORMANCE.md`：Mock P50=9.0ms / P90=9.3ms；9 个降级场景通过 | 9ms 已明确标注不构成 live 结论；live 缺 key 且搜索契约硬关闭，见 `docs/PROOF.md` 第 4 节 |
 | T4.5 验收报告 | E | done | `docs/ACCEPTANCE_REPORT.md`：A1-A7 全过 + v1 补缺口复验记录（A5 改 7/7、A6 新数字、A3 复核包） | A3 仍标注 AI 自评，真人复核延期 v2 Phase 0，不藏 |
 
 ## Decisions（问题 | 方案 | 为什么 | 影响范围）
@@ -113,6 +113,9 @@
 
 原「v2 Phase 0 待验证项」的 V1–V4 已全部并入本表：P2 结案（已证），P1/P3/P4/P5 仍挂未实证并写明缺件。
 
+因此「v1 已知缺口处置」表里的 #3（SmartResume 未实测）已从延期变成**已证**；#1/#2/#4 的状态词改为**未实证**，
+理由与缺件见上表，不再用「延期」这种听起来像排期的说法。
+
 ### P2 的实测数字（结论里不好看但必须写）
 
 | 设备 | 单份耗时 | 平均 | 峰值 RSS | 关键实体召回 | fallback 召回 |
@@ -127,20 +130,21 @@
 
 | 项 | 值 |
 |---|---|
-| 基线代码提交 | `e7478a7`（`[Lane-E] feat: 8 条已知缺口闭环 + 三档 golden + 缓存版本绑定 + 复核包`） |
-| 首个入库提交 | `9842df9`（本包此前不是 git 仓库，本轮补 `.gitignore` 后初始化） |
-| 本轮文档提交 | `3412f16`（基线快照）、`144088a`（验收报告同步）、`84088a8`（复核包合并清单） |
-| 分支 | `main` |
-| 入库文件数 | 118（已确认无 `.env`、无 `starter/sidecar/.cache`、无 `node_modules`、无 `.tmp`） |
-| 缓存版本号 | `recon-2+schema1.0`（`app/version.py`；key 与 payload 双重绑定） |
+| 基线代码提交 | `79acf7e`（`proof: 外部依赖实证 — SmartResume 真跑通(CPU/GPU+哈希), Docker/天眼查/live 性能/真人复核如实记未实证`） |
+| 上一个基线 | `e7478a7`（v1 补缺口：8 条闭环 + 三档 golden + 缓存版本绑定） |
+| 首个入库提交 | `9842df9`（本包此前不是 git 仓库，本包初始化时补 `.gitignore`） |
+| 分支 | `main`（**未配置 remote**，因此 CI 一次未跑） |
+| 入库文件数 | 140（已确认无 `.env`、无 `.cache`、无 `node_modules`、无 `.tmp`、无模型权重） |
+| 缓存版本号 | `recon-2+schema1.0`（`app/version.py`；key 与 payload 双重绑定，未变） |
 | golden set | 7 组，通过 7/7 = **100%**（阈值 80%）；三档覆盖 `['discussable', 'gap', 'strong']` |
-| Python 测试 | **172 passed**（基线 139 → 本轮 +33） |
+| Python 测试 | **180 passed**（139 → 172 → 180；本轮 +8：费用上限 5、真实映射 2、空壳降级 1） |
 | 插件测试 | **28 passed**（`npm run check` 通过，无新增） |
-| Docker | **未构建**（本机无 docker）；17 项静态校验全过，`status=static_only` |
-| SmartResume 本地模型 | **未实测**（本机无 GPU / 不满足 ≥8GB 内存 ≥10GB 存储）；fallback 路径 17 项测试 |
-| 验收 | A1-A7 全过；A3 为 AI 自评，真人复核列 v2 Phase 0 V1 |
+| Docker | **未实证**（本机无容器运行时；仓库无 remote → CI 未触发）；静态 25 项全过，`status=static_only` |
+| SmartResume 本地模型 | **已证**（CPU 92.33s / GPU 31.44s 均值，3/3 非空壳，模型 9/9 哈希一致） |
+| 外部依赖总账 | 已证 1 项（SmartResume）；未实证 4 项（Docker、天眼查、live 性能、真人复核），逐项缺件见 `docs/PROOF.md` |
+| 验收 | A1-A7 全过（沿用）；A3 仍为 AI 自评，真人复核未实证 |
 
-`bash scripts/verify.sh` 关键输出（完整日志 `.tmp/verify-baseline.log`，不入库）：
+`bash scripts/verify.sh` 关键输出（完整日志 `.tmp/verify-proof.log`，不入库）：
 
 ```text
 == pack: <repo>
@@ -150,10 +154,17 @@
 == mock demo ok
 通过 7/7 = 100%（要求 >= 80%）
 档位覆盖：['discussable', 'gap', 'strong']（要求 ['discussable', 'gap', 'strong']）
-镜像构建：未执行（PATH 中找不到 docker 可执行文件）—— 结论只覆盖静态校验，不许写成『已构建』
+CI 证据包：未提供 —— 未实证
+镜像构建：未实证（缺镜像 ID / 构建日志 / 容器日志三件套）—— 不许写成『已构建』
 == review pack ok（人工判定位仍为空白）
 == cache version: recon-2+schema1.0
-== pytest ok (172 passed)
+== PROOF 守门通过（5 项，状态词合法，证据文件齐全，三件套完整）
+  未实证  Docker 镜像构建与容器运行
+  已证   SmartResume 本地模型解析
+  未实证  天眼查真实调用（1 家 basic + 1 家 deep）
+  未实证  live 真实性能（真实搜索 + 真实 LLM 的 P50/P90）
+  未实证  真人复核（人工评审 17 题）
+== pytest ok (180 passed)
 == plugin check+test ok (# pass 28)
 == verify passed
 ```
@@ -162,10 +173,21 @@
 
 ```bash
 bash scripts/verify.sh
+python scripts/check_proof.py                 # 外部依赖实证总账守门
+python scripts/check_docker_assets.py         # 静态 25 项；有 CI 证据时加 --ci-evidence
+python scripts/proof_tianyancha.py --dry-run  # 天眼查 Mock 隔离（唯一本地可跑段）
+python scripts/measure_performance.py         # Mock 性能；--live 会预检并拒绝出数字
 python scripts/run_golden_regression.py --json .tmp/golden-report.json
-python scripts/check_docker_assets.py
-python scripts/export_review_pack.py
 ```
 
-> 说明：本次快照写入会再产生一次**仅文档**的提交（PROGRESS.md 追加本节），代码基线以 `e7478a7` 为准。
+SmartResume 复现（需单独 venv 与模型，均不入库）：
+
+```bash
+.tmp/sr-venv/Scripts/python.exe scripts/fetch_smartresume_model.py --dest .tmp/models/llm
+.tmp/sr-venv/Scripts/python.exe scripts/make_sample_pdfs.py --out .tmp/resumes-pdf
+.tmp/sr-venv/Scripts/python.exe scripts/proof_smartresume.py --model-dir .tmp/models/llm/Qwen3-0.6B --out docs/proof/smartresume-cpu.json --device cpu
+.tmp/sr-venv/Scripts/python.exe scripts/proof_smartresume.py --model-dir .tmp/models/llm/Qwen3-0.6B --out docs/proof/smartresume-gpu.json --device cuda
+```
+
+> 说明：本快照写入会再产生一次**仅文档**的提交（PROGRESS.md 追加本节），代码基线以 `79acf7e` 为准。
 
