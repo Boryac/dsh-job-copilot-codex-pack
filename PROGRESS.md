@@ -108,6 +108,7 @@
 |---|---|
 | 基线代码提交 | `e7478a7`（`[Lane-E] feat: 8 条已知缺口闭环 + 三档 golden + 缓存版本绑定 + 复核包`） |
 | 首个入库提交 | `9842df9`（本包此前不是 git 仓库，本轮补 `.gitignore` 后初始化） |
+| 本轮文档提交 | `3412f16`（基线快照）、`144088a`（验收报告同步）、`84088a8`（复核包合并清单） |
 | 分支 | `main` |
 | 入库文件数 | 118（已确认无 `.env`、无 `starter/sidecar/.cache`、无 `node_modules`、无 `.tmp`） |
 | 缓存版本号 | `recon-2+schema1.0`（`app/version.py`；key 与 payload 双重绑定） |
