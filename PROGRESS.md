@@ -101,3 +101,49 @@
 | V2 | live 性能（对应缺口 2） | 接真实 key 后 `python scripts/measure_performance.py --runs 20` 重测，覆盖 `docs/PERFORMANCE.md`；P90 仍须 ≤120s | Lane A/B |
 | V3 | SmartResume 本地模型（对应缺口 3） | 满足 ≥8GB 内存/≥10GB 存储/可选 CUDA 的机器上跑 5 份脱敏简历，记录字段准确率并复核 `_normalize()` 映射；不达标就关掉该路径 | Lane B |
 | V4 | Docker 构建（对应缺口 4） | `docker build` 成功 + 容器内 `/health` 200 + 容器内 Mock demo 产出报告；把 `check_docker_assets.py` 的 `status` 从 `static_only` 改为 `built` | Lane B |
+
+## v1 基线快照（进 v2 前以此为基准）
+
+| 项 | 值 |
+|---|---|
+| 基线代码提交 | `e7478a7`（`[Lane-E] feat: 8 条已知缺口闭环 + 三档 golden + 缓存版本绑定 + 复核包`） |
+| 首个入库提交 | `9842df9`（本包此前不是 git 仓库，本轮补 `.gitignore` 后初始化） |
+| 分支 | `main` |
+| 入库文件数 | 118（已确认无 `.env`、无 `starter/sidecar/.cache`、无 `node_modules`、无 `.tmp`） |
+| 缓存版本号 | `recon-2+schema1.0`（`app/version.py`；key 与 payload 双重绑定） |
+| golden set | 7 组，通过 7/7 = **100%**（阈值 80%）；三档覆盖 `['discussable', 'gap', 'strong']` |
+| Python 测试 | **172 passed**（基线 139 → 本轮 +33） |
+| 插件测试 | **28 passed**（`npm run check` 通过，无新增） |
+| Docker | **未构建**（本机无 docker）；17 项静态校验全过，`status=static_only` |
+| SmartResume 本地模型 | **未实测**（本机无 GPU / 不满足 ≥8GB 内存 ≥10GB 存储）；fallback 路径 17 项测试 |
+| 验收 | A1-A7 全过；A3 为 AI 自评，真人复核列 v2 Phase 0 V1 |
+
+`bash scripts/verify.sh` 关键输出（完整日志 `.tmp/verify-baseline.log`，不入库）：
+
+```text
+== pack: <repo>
+== files ok
+== json ok
+== contracts ok
+== mock demo ok
+通过 7/7 = 100%（要求 >= 80%）
+档位覆盖：['discussable', 'gap', 'strong']（要求 ['discussable', 'gap', 'strong']）
+镜像构建：未执行（PATH 中找不到 docker 可执行文件）—— 结论只覆盖静态校验，不许写成『已构建』
+== review pack ok（人工判定位仍为空白）
+== cache version: recon-2+schema1.0
+== pytest ok (172 passed)
+== plugin check+test ok (# pass 28)
+== verify passed
+```
+
+复跑方式：
+
+```bash
+bash scripts/verify.sh
+python scripts/run_golden_regression.py --json .tmp/golden-report.json
+python scripts/check_docker_assets.py
+python scripts/export_review_pack.py
+```
+
+> 说明：本次快照写入会再产生一次**仅文档**的提交（PROGRESS.md 追加本节），代码基线以 `e7478a7` 为准。
+
