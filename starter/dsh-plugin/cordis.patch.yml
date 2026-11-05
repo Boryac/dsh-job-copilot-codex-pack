@@ -1,0 +1,6 @@
+# Bundle 补丁层：profile 加载本包时插入一行宿主插件。
+# name 必须等于 package.json 的 name，DSH 才能解析到宿主半入口（main -> host.mjs）。
+# 不注入系统提示词：指导载体是 3 个工具描述 + job-fit-orchestrator skill + /job-fit 命令。
+- insert:
+    - id: dsh-job-skill-plugin
+      name: dsh-job-skill-plugin

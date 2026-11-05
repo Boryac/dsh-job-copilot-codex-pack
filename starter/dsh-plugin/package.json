@@ -1,13 +1,30 @@
 {
   "name": "dsh-job-skill-plugin",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "DSH job background-check and interview-prep skill: 3 tools + 1 orchestrator skill, report exportable as Markdown.",
-  "main": "dist/index.js",
+  "main": "./host.mjs",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "check": "tsc -p tsconfig.json --noEmit",
     "test": "npm run build && node --test \"dist/tests/*.test.js\""
+  },
+  "dsh": {
+    "id": "dsh-job-skill-plugin",
+    "name": "求职作战包",
+    "version": "1.0.1",
+    "permissions": "本地 HTTP（sidecar 127.0.0.1:8000）；读简历/JD 文件；写报告导出目录",
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh": ">=0.2.0-rc.1 <0.3.0-0"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/dsh": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@types/node": "^22.20.5",

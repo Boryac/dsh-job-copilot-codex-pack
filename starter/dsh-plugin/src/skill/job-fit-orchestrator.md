@@ -25,9 +25,69 @@ timeoutMs: 120000
 1. **简历结构化**：`resume-structurer(file_path)` → 拿到 `exp_01…` 证据 ID。
 2. **JD 拆解**：`jd-decoder(text | url)` → 拿到 `jd_01…` 要求 ID。**优先让用户粘贴文本**；URL 只在用户坚持时试，失败立刻要求粘贴，不许用残缺内容继续。
 3. **公司背调**：`company-recon(company_name, depth="basic")` → 硬数据（verified）+ 软信息（inferred）。公司名不确定时先向用户确认工商主体，不猜。
-4. **编排分析**：`POST /v1/analysis`（或插件内 `analyseJobFit`）→ 匹配档位 + 自我介绍 + 面试题 + 9 节报告 + Markdown 文件。
+4. **编排分析**：`POST /v1/analysis` → 匹配档位 + 自我介绍 + 面试题 + 第 0 节结论 + 8 节正文。
+5. **报告落盘**：`POST /v1/report/export` → **由 sidecar 自己写文件**，你只拿路径。
+6. **核对**：比对落盘文件与服务端原文的哈希、数 `evidence_ref`、找声明句。不过这一关，这一轮不算通过。
 
 第 1、2、3 步可以并行发起；第 4 步必须等前三步都有结果（含降级结果）。
+
+## 第 4–6 步是强制的：不许自己写报告
+
+**三个工具调完 ≠ 有报告。** 你自己写的那份报告一定缺 `evidence_ref`、一定缺声明句，属于无效交付；上一轮就是这么废掉的。报告正文只有一个合法来源：sidecar 的 `/v1/analysis`，而且必须由 sidecar 自己落盘。
+
+按顺序跑，不许替换成"我根据结果整理一份"：
+
+```bash
+# 第 4 步：出正文。这是唯一一次生成报告的机会。
+curl -s --noproxy '*' -X POST http://127.0.0.1:8000/v1/analysis \
+  -H 'Content-Type: application/json' \
+  -d '{"resume_path":"<简历绝对路径>","jd_text":"<JD 正文>","company_name":"<公司名>","depth":"basic"}' \
+  -o .tmp/job-fit-analysis.json
+
+# 第 5 步：落盘。不要用 write 工具自己写 .md，交给 sidecar。
+ANALYSIS_ID=$(python -c "import json;print(json.load(open('.tmp/job-fit-analysis.json'))['analysis_id'])")
+curl -s --noproxy '*' -X POST http://127.0.0.1:8000/v1/report/export \
+  -H 'Content-Type: application/json' \
+  -d "{\"analysis_id\":\"$ANALYSIS_ID\",\"out_dir\":\"reports\"}"
+# 返回 {"path":"...","filename":"..."}，把 path 原样记下来
+```
+
+**禁止事项（违反即这一轮作废）：**
+
+- 不许用 `write` / `str-replace` / heredoc 自己拼 `<报告>.md`。
+- 不许改写、精简、重排、润色 sidecar 返回的 `markdown`；连标题层级和标点都不动。
+- 不许"把 sidecar 的内容当参考，自己再写一版更像人写的"。
+- 不许在报告里补 sidecar 没给的题、没给的 `evidence_ref`、没给的数字。
+- 不许把 Mock 写成真实背调结论。
+
+## 第 6 步：核对（不过关就不许说完成）
+
+```bash
+# 1) 落盘文件必须与服务端原文一致（只允许 CRLF/LF 换行差异）
+tr -d '\r' < reports/<filename> | sha256sum
+curl -s --noproxy '*' http://127.0.0.1:8000/v1/analysis/$ANALYSIS_ID/report.md | tr -d '\r' | sha256sum
+# 两个哈希必须相同，否则说明你动过正文
+
+# 2) 声明句必须在
+grep -c "本报告由 AI 生成，需人工核实证据；匹配结论不是通过率预测。" reports/<filename>   # 必须 >= 1
+
+# 3) 每道题都要有真实 evidence_ref
+grep -o "evidence_ref" reports/<filename> | wc -l    # 必须 >= 面试题数量
+
+# 4) Mock 必须标出来
+grep -c "Mock" reports/<filename>                    # Mock 模式下必须 >= 1
+```
+
+四条全过，才能把摘要卡片和文件路径给用户。任何一条没过的处理方式：
+
+| 没过 | 怎么办 |
+|---|---|
+| 哈希不一致 | 删掉自己写的文件，重跑第 5 步；不许手工对齐 |
+| 缺声明句 | 说明你写的是自造稿，作废，重跑第 4–5 步 |
+| `evidence_ref` 少于题数 | 报告不合格，重跑第 4 步；不许自己补 ID |
+| sidecar 未启动 | 明说"sidecar 未启动，这一轮没有报告"，给启动命令，不许用自造稿顶上 |
+
+**摘要卡片可以自己组织语言，报告正文一个字都不能自己写。** 卡片里的亮点/缺口必须引用报告里已有的 `exp_` / `jd_` ID。
 
 ## deep 路径（要花钱的那条）
 
@@ -57,11 +117,21 @@ Mock 模式下金额为 0，但流程一模一样：先预估、再确认。不�
 ## 输出形态
 
 - **DSH 内只发摘要卡片**：结论档位、最大亮点（带 `exp_` ID）、最大缺口（带 `jd_` ID）、建议动作、导出文件名、Mock/降级提示。
-- **完整报告是 Markdown 文件**：第 0 节结论先行 + 8 节正文，随卡片给出本地路径。
-- 卡片不放全文，也不要把报告正文粘进对话。
+- **完整报告是 Markdown 文件，由 sidecar 落盘**：第 0 节结论先行 + 8 节正文，路径来自 `/v1/report/export` 的返回，不是你写的路径。
+- 卡片不放全文，也不要把报告正文粘进对话；要给全文就让用户开文件。
+
+## 追问怎么接
+
+用户追问（"为什么这个档位""第 3 题展开""换个说法介绍我"）时：
+
+1. 先把上一轮的 `analysis_id` 和报告文件路径找回来，读那份文件，不凭记忆答。
+2. 只解释、只重排、只补充文件里已有的事实（`exp_` / `jd_` / 面试题原文）。
+3. 要改报告内容（加题、改结论、换档位）就走完整的第 4–6 步重跑，不许在对话里改一份"口头新版报告"。
+4. 文件里没有的信息，直说没有，不许为了把追问答圆而编。
 
 ## 红线
 
+0. **报告正文只能来自 `/v1/analysis` 并由 sidecar 落盘**。自己写、改写、精简一律作废；四道核对（哈希、声明句、`evidence_ref` 计数、Mock 标注）不过关就不许说"已完成"。
 1. 匹配只给档位（强匹配 / 可聊有缺口 / 缺口明显），**不给百分比、不说"通过率"**。
 2. 每个面试题必须带 `evidence_ref`；找不到证据的题不许出。
 3. 硬数据只能是工商可核验字段且 `verified`；推断一律标 `inferred`，两层不混写。

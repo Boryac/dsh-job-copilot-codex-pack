@@ -3,6 +3,8 @@
 .env.*
 .tmp/
 *.log
+# sidecar 运行时落盘的报告目录（示例报告见仓库根目录 reports/）
+starter/sidecar/reports/
 # 例外：docs/proof 下的日志是实证证据，必须入库（否则别人拉下来守门就失败）
 !docs/proof/*.log
 

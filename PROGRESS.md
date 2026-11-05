@@ -191,3 +191,193 @@ SmartResume 复现（需单独 venv 与模型，均不入库）：
 
 > 说明：本快照写入会再产生一次**仅文档**的提交（PROGRESS.md 追加本节），代码基线以 `79acf7e` 为准。
 
+---
+
+## 安装到 DSH 桌面端（本轮交付）
+
+详细步骤见 `docs/INSTALL_DSH_DESKTOP.md`（本机实测路径与命令，非示意）。本节只记结论与证据。
+
+### 结论
+
+| 问题 | 结论 |
+|---|---|
+| 装上了没有 | **装上了**。3 个工具 + 1 个 Skill 已注册进 desktop profile，并有加载自证日志 |
+| 在 DSH 里跑通了没有 | **部分跑通**。工具与 Skill 在 DSH 会话内被模型真实调用且全部 200；合规报告由 sidecar 生成器产出并落盘。未达成 3 项见下 |
+| 导出文件在哪 | `reports/` 下两份，sha256 见下。合规的是 `report-云栖生活…-87ac107f.md` |
+
+### 实测环境
+
+| 项 | 值 |
+|---|---|
+| DSH 桌面端版本 | `0.2.1-rc.5`（`@deepseek-ai/dsh-desktop`） |
+| 插件源目录（权威副本） | `C:\Users\22334\.dsh\plugins\dsh-job-skill-plugin` |
+| 插件实际加载位置 | `C:\Users\22334\.dsh\profiles\desktop\node_modules\dsh-job-skill-plugin` |
+| 登记的 profile | `desktop`、`headless`（`package.json` → `dsh.profile.bundles` 均已追加 `dsh-job-skill-plugin`） |
+| sidecar | `127.0.0.1:8000`，Mock 模式，`python -m uvicorn app.main:app --host 127.0.0.1 --port 8000` |
+| sidecar 健康检查 | `{"status":"ok","version":"1.0.0","mode":"mock","degraded_modules":[],"cache_days":7}` |
+
+安装方式按仓库规定走官方 CLI，没有手工往 `node_modules` 里塞文件：
+
+```bash
+# 1. 先让 DSH 完全退出，否则 pnpm 会 EPERM（见安装文档第 6 节）
+taskkill /F /IM "DeepSeek Harness.exe"
+# 2. 从源目录装进 desktop profile
+dsh plugin --profile desktop add file:C:/Users/22334/.dsh/plugins/dsh-job-skill-plugin
+# 3. assets 缺失时补齐
+dsh plugin --profile desktop install
+```
+
+### 加载自证
+
+`~/.dsh/profiles/desktop/node_modules/dsh-job-skill-plugin/load.log`：
+
+```text
+2026-11-05T05:50:23.796Z	plugin=dsh-job-skill-plugin	tools=resume-structurer,company-recon,jd-decoder	sidecar=http://localhost:8000
+```
+
+### 真实调用证据（sidecar 日志 `.tmp/sidecar.log`）
+
+```text
+INFO:     127.0.0.1:63944 - "POST /v1/resume/parse HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63944 - "POST /v1/jd/decode HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63944 - "POST /v1/company/recon HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52349 - "POST /v1/analysis HTTP/1.1" 200 OK
+orchestrator step=resume_structurer / jd_decoder / company_recon / matching / generate  analysis=31995ccb1630
+```
+
+### 导出 Markdown 与哈希
+
+| 文件 | sha256 | 是否算交付物 |
+|---|---|---|
+| `reports/report-云栖生活科技（福州）有限公司-本地生活商务拓展（2027-届校园招聘）-87ac107f.md` | `bbd0c289932c71e10ebcca09d7ce142f97f35e7a36e0d5ded2d5dc8492fee8bf` | **算**。10 节（第 0 节 + 8 节正文 + 补充），8 道题各带 `evidence_ref`，声明原文 1 处，Mock 标注 14 处 |
+| `reports/job-fit-report-林舟-云栖生活-2026-11-05.md` | `e6a2dfa7ffc9c1edcc047dbecb354948990657dc6c0c8effc08d8894b89aca13` | **不算**。这是 DSH 内 agent 自己写的稿，`evidence_ref` 数量 0、无声明句，绕过 sidecar 生成器，只能当过程稿；该文件已移出仓库，仅存本机备份区 |
+
+### 未达成（如实记录）
+
+1. **`/job-fit` 命令没出现在斜杠菜单**。菜单里只有 `file/goal/plan/ig5/...`，输入 `/job` 过滤为空。命令已按 Cordis 协议注册（`ctx.inject(['commands'])`），但宿主未展示，根因未定位。工具与 Skill 不受影响。
+2. **DSH 桌面窗口无法脚本化输入**。渲染进程不在 CDP target 列表（只有 `dsh://host`），合成的 `SendInput` 按键落到了别的窗口（已立即停止，未损坏文件）。改为走 DSH 自带 Web 界面 + Edge headless 才拿到可控输入。
+3. **「接着追问一轮」未验证**。sidecar 只收到 1 次 `/v1/analysis`（`analysis=31995ccb1630`），没有第二轮调用的日志证据，不能写成已跑通。
+4. **报告成文这一步，agent 会绕过生成器**。必须在追问里明确要求「从 `/v1/analysis` 的 `markdown` 字段落盘」，否则产出无 `evidence_ref`、无声明，不可验收。
+
+### 还需你手动完成的步骤
+
+1. **重启 DSH 桌面端**：插件注册与 `bundles` 登记已写好，但需要一次全新启动才会加载。
+2. **每次开机后手动起 sidecar**（DSH 不会帮你拉起）：
+   ```bash
+   cd C:/Users/22334/Desktop/dsh-job-copilot-codex-pack/starter/sidecar
+   python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+   ```
+   起来后 `curl --noproxy '*' http://127.0.0.1:8000/health` 应返回 `"mode":"mock"`。
+3. **在 DSH 界面里确认**：设置 → 插件里能看到「求职作战包」，3 个工具处于启用状态；新开会话问一句「你能用 resume-structurer 吗」验证 Skill 也被加载。
+4. **`/job-fit` 命令目前不可用**，要一条链路跑完请直接在对话里说「用 job-fit-orchestrator 跑一遍」，或在本地执行 sidecar 的 `/v1/analysis`（本轮合规报告就是这么来的）。
+5. **`reports/` 未入库**（`.gitignore` 之外，仅本地留存）。要留档请自行提交或拷走。
+
+### 本轮改动清单
+
+| 文件 | 变更 |
+|---|---|
+| `starter/dsh-plugin/host.mjs` | 新增。Cordis 宿主层，把 3 个工具转 DSH schema、解析 Skill md、注册 `job-fit` 命令、写 `load.log` |
+| `starter/dsh-plugin/package.json` | `main` 改为 `./host.mjs`，新增 `dsh` 清单与 `peerDependencies` |
+| `starter/dsh-plugin/cordis.patch.yml` | 新增。bundle 补丁层 |
+| `scripts/verify.sh` | 修 pytest 回归：`PYTEST_DEBUG_TEMPROOT` 钉到 `.tmp/pytest-temp` + `-p no:cacheprovider` |
+| `docs/INSTALL_DSH_DESKTOP.md` | 新增。8 节安装与排障文档 |
+| `~/.dsh/profiles/{desktop,headless}/package.json` | `dependencies` 与 `dsh.profile.bundles` 追加 `dsh-job-skill-plugin`（desktop 由 CLI 写入，bundles 为脚本写入，已备份 `.bak-jobfit`） |
+
+红线自查：3 个工具签名未动；8 节顺序未动；证据规则与验收阈值未动；无真实 key 进代码/日志/git；未进 v2，未加网页壳、历史记录、模拟面试、多 Agent。
+
+---
+
+## 追加：修掉桌面端两个缺口（插件 1.0.1）
+
+### 缺口 1：`/job-fit` 不进斜杠菜单 —— 已修复
+
+根因不是协议也不是 bundle 登记。解包 DSH 的 `app.asar` 读到 `@deepseek-ai/dsh-commands/lib/index.js` 的 `normalizeDefinition`：
+
+```js
+if (typeof definition.handler !== "function") throw new TypeError(`command "${definition.name}" handler must be a function`);
+```
+
+对照 `@deepseek-ai/dsh-command-goal/lib/index.js` 里真正生效的 `/goal`：形状是 `definitionId / name / description / input.hint / handler`。**我把回调写成了 `execute`**，注册时抛 TypeError，又被 `ctx.inject(['commands'], ...)` 回调吞掉，命令从未进注册表。
+
+修复：
+
+- `host.mjs` 改成官方形状，并加 `cmdcheck` 自证：注册后把 `service.list(undefined)` 读回写进 `load.log`；注册抛错时写 `cmdfail`。
+- 新增 `tests/host-command.test.ts`，把 dsh-commands 的校验规则照抄成断言（含「不能残留 `execute` 字段」），插件测试 28 → 30 全绿。
+- 插件升 `1.0.1`，清掉 pnpm 硬链接旧副本后重装（源目录改了但 profile 里还是 13:49 旧 `host.mjs`，光 `install` 不会刷新 `file:` 依赖）。
+
+实测证据：
+
+```text
+load.log: 2026-11-05T06:23:34.618Z  cmdcheck  name=job-fit  registered=/feedback,/job-fit
+```
+
+DSH 桌面端输入 `/job` 后，菜单「指令」分组显示 `job-fit`（描述：求职作战包：简历 + JD + 公司 → 摘要卡片 + 8 节 Markdown 报告（默认 Mock 数据）），「技能」分组显示 `job-fit-orchestrator`。截图：`docs/evidence/dsh-desktop-slash-menu-crop.png`（整屏原始截图未入库，仅存本机备份区）。命令本身也执行成功，sidecar 收到 `POST /v1/analysis 200`（`analysis=8e519787b088`）并落盘。
+
+### 缺口 2：agent 绕过生成器 —— 已写死并实测生效
+
+`src/skill/job-fit-orchestrator.md` 增加硬规则：
+
+- 固定顺序由 4 步扩为 6 步：3 个工具 → `POST /v1/analysis` → `POST /v1/report/export`（**由 sidecar 写文件**）→ 四条核对。
+- 明令禁止 `write` / heredoc 自己拼 `.md`、禁止改写精简重排 sidecar 的 `markdown`、禁止补题补 ID。
+- 四条核对不过关即「这一轮作废」，并给出每种失败的处理方式。
+- 新增「追问怎么接」：读上一轮文件、只解释已有事实、要改结论才重跑第 4–6 步。
+
+DSH 桌面端完整一轮（新会话，Mock 模式，仓库自带脱敏 `resume-bd.txt` + 贴入 `jd-bd-campus.txt` 正文 + 公司「云栖生活科技（福州）有限公司」）：
+
+| 证据 | 结果 |
+|---|---|
+| 三工具 | sidecar `POST /v1/resume/parse`、`/v1/jd/decode`、`/v1/company/recon` 全 200 |
+| 第 4 步 | `POST /v1/analysis` 200，`analysis=2b54478040de`，orchestrator 五步日志齐全 |
+| 第 5 步 | `POST /v1/report/export` 200，文件由 sidecar 落盘 |
+| 第 6 步 | DSH 里显示四条核对：声明句 1 次、`evidence_ref` 8 次 = 面试题 8 道、Mock 标注 14 处、与服务端原文哈希一致 |
+| 追问 | 只读 `/v1/analysis/{id}/report.md`，引用报告里的 `exp_/jd_` ID 与行号，未重跑 `/v1/analysis`、未生成新报告 |
+
+独立复核：落盘文件与 `GET /v1/analysis/278d1c09-4eed-4365-8e85-3851136076c9/report.md` 在归一化换行后 sha256 相同（`6f3bdac0…`），与上一份生成器报告仅差「生成时间」和 `analysis_id` 两行，正文其余逐字节一致 —— agent 没有改写一个字。
+
+截图证据：`docs/evidence/dsh-desktop-slash-menu-crop.png`（斜杠菜单）、`docs/evidence/dsh-desktop-round1-result-crop.png`（卡片 + 四条核对 + 报告文件卡片）、`docs/evidence/dsh-desktop-followup-crop.png`（追问回答）。`/job-fit` 命令执行本身不截图：DSH 把斜杠命令结果写成日志事件、不在对话流里常驻显示，证据是 sidecar 的 `POST /v1/analysis 200`（`analysis=8e519787b088`）与落盘文件。
+
+### 本轮导出文件与哈希
+
+| 文件 | sha256 | 来源 |
+|---|---|---|
+| `starter/sidecar/reports/report-云栖生活科技（福州）有限公司-本地生活商务拓展（2027-届校园招聘）-278d1c09.md` | `ffbf1ab3408edabe8bc117c8b24611bf8fa02c3ae1ee0d2c090d6bf3fe46c43a` | DSH 里 agent 按 skill 第 4–6 步产出（`out_dir=reports` 按 sidecar 工作目录解析） |
+| `reports/report-云栖生活科技（福州）有限公司-本地生活商务拓展（2027-届校园招聘）-327e987b.md` | `72e7d67c7e344e3821902ffe7dc01783ee5e20e35006249a0e1d85e1d0b268a2` | DSH 里 `/job-fit` 命令直接产出（`--out` 给绝对路径） |
+
+两份都合规：9 个 `##` 标题（第 0 节 + 第 1～8 节顺序不变）、声明句 1 处、`evidence_ref` 8 处、Mock 标注 14 处。
+
+### 验收
+
+`bash scripts/verify.sh` 全绿：**pytest 180 passed / 插件 30 pass（原 28，新增 2 条回归）/ golden 7/7**。工具签名、8 节顺序、证据规则、验收阈值均未改动；未进 v2，未加新功能（只加了一条测试和一个注册自证日志）。
+
+---
+
+## 2026-11-05 收尾：卸载本机安装 + 上传 GitHub
+
+**结论**：本机 DSH 插件已完整卸载并验证无残留；代码包已提交推送到 https://github.com/Boryac/dsh-job-copilot-codex-pack （public，分支 `main`）。不进 v2，不改工具签名、8 节顺序、证据规则、验收阈值。
+
+### 卸载（完整，可回滚）
+
+- 执行前退出 DSH 全部 5 个进程，避免文件占用报 EPERM；Mock sidecar 本已停止。
+- 备份区：`C:\Users\22334\Desktop\毕设产出\dsh-uninstall-backup-2026-11-05\`。3 个插件目录是**整体移动**、未删任何字节，文件数移前移后一致：源目录 56、desktop 副本 57、headless 副本 26。另存两份 `package.json` 原样副本、6 份 pnpm 元数据副本、自建的 `package.json.bak-jobfit`。
+- 配置还原：desktop 与 headless 的 `package.json` 各删 1 行 dependency 与 1 行 bundles。还原后 desktop 12 deps / 17 bundles、headless 0 deps / 2 bundles，`hasJob=false`；JSON 可解析，diff 显示只删了这 4 行，其它插件一行未动，`dsh-infinite-gen-5` 完好。
+- 锁文件：用官方 CLI `dsh plugin --profile desktop install` 与 `--profile headless install` 重建，pnpm 明确回报 `dependencies: - dsh-job-skill-plugin`（Packages `-11` / `-1`）。两份 `pnpm-lock.yaml`、两份 `.modules.yaml`、两份 `.pnpm/lock.yaml` 引用数均为 **0**。唯一残留是 `.plugin-manager/logs/…/pnpm.log` 历史操作日志，不参与加载。
+
+### 上传边界
+
+| 范围 | 内容 |
+|---|---|
+| 入库 | 代码、`docs/INSTALL_DSH_DESKTOP.md`、3 张 DSH 窗口裁切截图 `docs/evidence/*-crop.png`、2 份合规示例报告 `reports/report-…87ac107f.md` 与 `…327e987b.md` |
+| 不入库 | `.tmp`（6.5G 解包文件）、`*.log`、`dist/`、`node_modules/`、`starter/sidecar/reports/`（运行时产物，已写入 `.gitignore`）、3 张整屏截图（可能带到桌面其它窗口）、不合规过程稿 |
+| 移入备份区可随时取回 | `not-published/` 下 3 张整屏截图与 `job-fit-report-林舟-云栖生活-2026-11-05.md` |
+
+- 精确扫描 `(sk|ghp|gho|github_pat)_[A-Za-z0-9]{24,}` 与 `AKIA…`：待提交文件和全部 git 历史 **0 命中**，无真实 key 入库，无真实付费调用。
+- 示例简历、JD、公司名均取自 `templates/samples/`，未使用真实简历。
+- 两份入库报告复核：声明句各 1 处、`evidence_ref` 各 8 处、Mock 标注各 14 处。
+
+### 需要你手动做的
+
+1. DSH 桌面端已被关闭，需要时手动重开；重开后斜杠菜单不再有 `job-fit`，这是卸载后的预期状态。
+2. Mock sidecar 已停。要再跑，按 `docs/INSTALL_DSH_DESKTOP.md` 第 4 节起 `uvicorn app.main:app --host 127.0.0.1 --port 8000`。
+3. 要恢复本机安装，把备份区 3 个目录移回原路径，按文档第 3 节重新登记 dependency 与 bundles，再跑一次官方 CLI install。
+4. 公开仓库会暴露文档里的本机绝对路径 `C:\Users\22334\…`。这些是实测记录，如不希望公开可自行替换。
+

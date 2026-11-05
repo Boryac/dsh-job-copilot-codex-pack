@@ -52,8 +52,16 @@ python3 -c "import sys; sys.path.insert(0, sys.argv[1]); from app.version import
 python3 "$PACK_DIR/scripts/check_proof.py"
 
 # 4. 测试套件：依赖装了就必须绿；没装就明说跳过，不假装通过
+#
+# PYTEST_DEBUG_TEMPROOT 把 pytest 的临时根目录钉在包内 .tmp：
+# 默认落在系统临时目录（%TEMP%/pytest-of-<user>），pytest 每次清理历史 basetemp
+# 都要一次性删上百个目录，在装有批量删除保护的机器上会被拦下来，导致 180 条测试
+# 全绿却返回非零退出码。钉到包内后只清理本包自己的小目录，不再碰系统临时目录。
 if python3 -c "import pytest" >/dev/null 2>&1; then
-  ( cd "$PACK_POSIX/starter/sidecar" && python3 -m pytest tests/ -q ) >"$PACK_POSIX/.tmp/pytest.log" 2>&1 || {
+  mkdir -p "$PACK_POSIX/.tmp/pytest-temp"
+  ( cd "$PACK_POSIX/starter/sidecar" \
+      && PYTEST_DEBUG_TEMPROOT="$PACK_POSIX/.tmp/pytest-temp" \
+         python3 -m pytest tests/ -q -p no:cacheprovider ) >"$PACK_POSIX/.tmp/pytest.log" 2>&1 || {
     echo "== pytest FAILED"; tail -25 "$PACK_POSIX/.tmp/pytest.log"; exit 1;
   }
   echo "== pytest ok ($(grep -oE '[0-9]+ passed' "$PACK_POSIX/.tmp/pytest.log" | tail -1))"
