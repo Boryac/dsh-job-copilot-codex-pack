@@ -1,0 +1,171 @@
+{
+  "docker_available": false,
+  "docker_version": "PATH 中找不到 docker 可执行文件",
+  "static_checks": [
+    {
+      "id": "D1",
+      "ok": true,
+      "desc": "Dockerfile 存在",
+      "detail": "C:\\Users\\22334\\Desktop\\dsh-job-copilot-codex-pack\\starter\\sidecar\\Dockerfile"
+    },
+    {
+      "id": "D2",
+      "ok": true,
+      "desc": "基础镜像固定版本、不用 latest",
+      "detail": "python:3.11-slim"
+    },
+    {
+      "id": "D3",
+      "ok": true,
+      "desc": "安装 dependencies 用 requirements.txt",
+      "detail": ""
+    },
+    {
+      "id": "D4",
+      "ok": true,
+      "desc": "先拷依赖再拷代码（利用层缓存）",
+      "detail": "requirements@314 app@391"
+    },
+    {
+      "id": "D5",
+      "ok": true,
+      "desc": "非 root 运行",
+      "detail": ""
+    },
+    {
+      "id": "D6",
+      "ok": true,
+      "desc": "EXPOSE 与 sidecar 端口一致（8000）",
+      "detail": "EXPOSE 8000"
+    },
+    {
+      "id": "D7",
+      "ok": true,
+      "desc": "声明 HEALTHCHECK（/health 可探活）",
+      "detail": ""
+    },
+    {
+      "id": "D8",
+      "ok": true,
+      "desc": "镜像内不拷贝 .env（避免把密钥烤进镜像）",
+      "detail": ""
+    },
+    {
+      "id": "D9",
+      "ok": true,
+      "desc": "Dockerfile 里没有硬编码密钥",
+      "detail": ""
+    },
+    {
+      "id": "C1",
+      "ok": true,
+      "desc": "docker-compose.yml 存在",
+      "detail": "C:\\Users\\22334\\Desktop\\dsh-job-copilot-codex-pack\\starter\\docker-compose.yml"
+    },
+    {
+      "id": "C2",
+      "ok": true,
+      "desc": "compose 的 build context / dockerfile 指向真实路径",
+      "detail": ""
+    },
+    {
+      "id": "C3",
+      "ok": true,
+      "desc": "compose 引用的 context 目录存在（静态存在性，非构建验证）",
+      "detail": ""
+    },
+    {
+      "id": "C4",
+      "ok": true,
+      "desc": "端口映射可用环境变量覆盖且容器端口一致",
+      "detail": ""
+    },
+    {
+      "id": "C5",
+      "ok": true,
+      "desc": "compose 里没有硬编码密钥（密钥只来自 env_file/环境变量）",
+      "detail": ""
+    },
+    {
+      "id": "I1",
+      "ok": true,
+      "desc": ".dockerignore 排除 .cache",
+      "detail": ""
+    },
+    {
+      "id": "I2",
+      "ok": true,
+      "desc": ".dockerignore 排除 .env",
+      "detail": ""
+    },
+    {
+      "id": "I3",
+      "ok": true,
+      "desc": "requirements.txt 存在",
+      "detail": ""
+    },
+    {
+      "id": "W1",
+      "ok": true,
+      "desc": "CI 工作流存在",
+      "detail": "C:\\Users\\22334\\Desktop\\dsh-job-copilot-codex-pack\\.github\\workflows\\docker-build.yml"
+    },
+    {
+      "id": "W2",
+      "ok": true,
+      "desc": "CI 工作流 YAML 可解析且含 jobs",
+      "detail": "jobs=['build-and-prove']"
+    },
+    {
+      "id": "W3",
+      "ok": true,
+      "desc": "工作流里真的执行 docker build",
+      "detail": ""
+    },
+    {
+      "id": "W4",
+      "ok": true,
+      "desc": "工作流里真的执行 docker run",
+      "detail": ""
+    },
+    {
+      "id": "W5",
+      "ok": true,
+      "desc": "工作流探活 /health 且校验 200",
+      "detail": ""
+    },
+    {
+      "id": "W6",
+      "ok": true,
+      "desc": "工作流在容器内跑 verify.sh",
+      "detail": ""
+    },
+    {
+      "id": "W7",
+      "ok": true,
+      "desc": "构建证据以 artifact 形式留存",
+      "detail": ""
+    },
+    {
+      "id": "W8",
+      "ok": true,
+      "desc": "工作流记录镜像 ID",
+      "detail": ""
+    }
+  ],
+  "static_ok": true,
+  "build": {
+    "attempted": false,
+    "built": false,
+    "reason": "PATH 中找不到 docker 可执行文件"
+  },
+  "ci_evidence": {
+    "status": "not_provided",
+    "ok": false,
+    "checks": [],
+    "evidence": {}
+  },
+  "status": "static_only",
+  "built_source": "",
+  "note": "status=built 只在两种情况成立：本机 docker build 成功，或 CI 证据包通过 scripts/check_ci_evidence.py 机械校验。静态校验通过一律记为 static_only。"
+}

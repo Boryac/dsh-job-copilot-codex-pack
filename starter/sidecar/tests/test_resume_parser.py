@@ -139,15 +139,83 @@ def test_smartresume_unavailable_reason_is_explicit(settings):
     assert "Mock" in backend.unavailable_reason()
 
 
-def test_smartresume_hardware_requirements_are_recorded_and_unverified():
-    """GPU/内存/存储要求要写在代码里可查，且明确标注『未实测』。"""
+def test_smartresume_hardware_requirements_are_recorded_and_measured():
+    """硬件要求要写在代码里可查；2026-11-05 真跑过之后必须带实测数字，而不是空口『已验证』。"""
     from app.parsers.resume import SmartResumeBackend
 
     req = SmartResumeBackend.HARDWARE_MIN
     assert req["ram_gb"] >= 8
     assert req["disk_gb"] >= 10
     assert "CUDA" in req["gpu"]
-    assert req["verified"] is False, "本地模型没实测，不该标成已验证"
+    assert req["verified"] is True, "本地模型已实测（docs/proof/smartresume-cpu.json）"
+    measured = req["measured"]
+    assert measured["model"].startswith("Qwen3-0.6B")
+    # 实测值必须能被解析成数字区间，防止写着"很快"这种不可核对的词
+    low, high = measured["cpu_seconds_per_resume"].split("–")
+    assert float(low) > 0 and float(high) >= float(low)
+    assert float(measured["peak_rss_mb"].split("–")[1]) > 3000
+
+
+def test_normalize_maps_real_upstream_payload():
+    """映射必须按上游真实返回（驼峰 + 嵌套 period）写，不能按猜的 snake_case。
+
+    这条用 2026-11-05 实跑抓到的结构做样本：曾经因为映射猜错，
+    experiences 整段为空且校验不过，最终静默降级成 fallback，报告却看不出来。
+    """
+    from app.parsers.resume import SmartResumeBackend
+
+    raw = {
+        "basicInfo": {"name": "林舟", "currentLocation": "福州", "personalEmail": "a@example.com"},
+        "workExperience": [
+            {
+                "companyName": "云途旅行（OTA）",
+                "position": "商务拓展实习生",
+                "employmentPeriod": {"startDate": "2025.07", "endDate": "2025.09"},
+                "jobDescription": "2025.07-2025.09 云途旅行（OTA） 商务拓展实习生\n"
+                "- 负责华东区 32 家酒店供应商的签约与上线，季度 GMV 提升 18%\n"
+                "- 搭建商家分层运营 SOP，商家复购率从 21% 提升到 29%",
+            }
+        ],
+        "education": [
+            {
+                "school": "福州外语外贸学院",
+                "major": "人工智能",
+                "degreeLevel": "本科",
+                "period": {"startDate": "2023.09", "endDate": "2027.06"},
+                "department": "",
+                "educationDescription": "主修课程：概率统计",
+            }
+        ],
+    }
+    out = SmartResumeBackend._normalize(raw)
+
+    assert out["parsing_mode"] == "smartresume"
+    assert out["basic_info"]["name"] == "林舟"
+    assert out["basic_info"]["location"] == "福州"
+    assert out["education"][0]["degree"] == "本科"
+    assert out["education"][0]["period"] == "2023.09-2027.06"
+    exp = out["experiences"][0]
+    assert exp["company"] == "云途旅行（OTA）"
+    assert exp["role"] == "商务拓展实习生"
+    assert exp["period"] == "2025.07-2025.09"
+    # 头行（时间+公司+岗位）不许混进 bullet 当证据
+    assert len(exp["bullets"]) == 2, exp["bullets"]
+    assert not exp["bullets"][0].startswith("2025.07")
+    assert [m["value"] for m in exp["metrics"]][:2] == ["32家", "18%"]
+
+
+def test_normalize_flags_upstream_limits():
+    """上游只支持 3 类抽取、文本输入无 bullet 回填——这两点必须写进 parsing_notes 让人看得见。"""
+    from app.parsers.resume import SmartResumeBackend
+
+    raw = {
+        "basicInfo": {"name": "张三"},
+        "workExperience": [{"companyName": "A", "position": "B", "jobDescription": ""}],
+    }
+    out = SmartResumeBackend._normalize(raw)
+    joined = " ".join(out["parsing_notes"])
+    assert "projects" in joined and "skills" in joined
+    assert "jobDescription" in joined
 
 
 def test_docx_fallback_keeps_experiences_and_metrics(settings, tmp_path):
@@ -173,3 +241,33 @@ def test_docx_fallback_keeps_experiences_and_metrics(settings, tmp_path):
     assert resume.experiences, "DOCX 解析没有出经历"
     metrics = resume.metrics_map()
     assert metrics.get(resume.experiences[0].id), "DOCX 解析丢了量化成果"
+
+
+def test_empty_smartresume_result_degrades_instead_of_claiming_success(settings, bd_resume_path, monkeypatch):
+    """上游返回空壳时必须降级，不能把"什么都没抽到"标成 smartresume 成功。
+
+    真实踩坑：GPU 上缺 accelerate，模型没加载，上游返回空 dict，
+    映射后是合法但全空的结构，parsing_mode 仍为 smartresume。
+    """
+    import app.parsers.resume as resume_module
+
+    monkeypatch.setattr(resume_module.SmartResumeBackend, "available", lambda self: True)
+    monkeypatch.setattr(
+        resume_module.SmartResumeBackend,
+        "parse",
+        lambda self, path, resume_id, extract_types: {
+            "schema_version": "1.0",
+            "parsing_mode": "smartresume",
+            "basic_info": {"name": None, "title": None, "location": None, "links": []},
+            "education": [],
+            "experiences": [],
+            "projects": [],
+            "skills": [],
+            "parsing_notes": [],
+            "data_mode": "live",
+        },
+    )
+    resume = resume_module.parse_resume(bd_resume_path, settings, resume_id="empty")
+    assert resume.parsing_mode == "fallback"
+    assert resume.experiences, "降级后必须真的从原文解析出经历"
+    assert any("空结构" in n for n in resume.parsing_notes), resume.parsing_notes

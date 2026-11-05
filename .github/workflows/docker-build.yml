@@ -1,0 +1,103 @@
+name: docker-build
+
+# 用途：本机无法执行 docker 时，由 CI 产出构建证据（镜像 ID / 构建日志 / 容器日志 / /health 响应 / 容器内自检）。
+# 纪律：只有这个工作流真实跑过、artifact 下载回来并通过 scripts/check_ci_evidence.py 机械校验，
+#       才允许把 Docker 项写成「已证」。本地没有 docker 时不许手工声称"已构建"。
+#
+# 证据产物（artifact: docker-evidence）：
+#   build.log / image-id.txt / container.log / health.json / health-status.txt
+#   health-transport.txt（探活用 curl 还是 python，如实记录）/ verify.log
+#
+# 注意：compose 声明了 env_file: .env，缺文件时 `docker compose up` 会拒绝启动。
+# 本工作流走 `docker build` + `docker run`，不依赖 .env；需要 compose 时先 `cp starter/.env.example starter/.env`。
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-and-prove:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show docker version
+        run: |
+          docker version
+          docker info --format '{{.ServerVersion}} {{.OSType}}/{{.Architecture}}'
+
+      - name: Build image (log captured)
+        working-directory: starter/sidecar
+        run: |
+          set -o pipefail
+          mkdir -p "$GITHUB_WORKSPACE/docker-evidence"
+          # 构建日志是证据的一部分，必须落盘，不能只留在 CI 控制台
+          docker build -t dsh-job-copilot-sidecar:ci . 2>&1 | tee "$GITHUB_WORKSPACE/docker-evidence/build.log"
+          docker image inspect dsh-job-copilot-sidecar:ci --format '{{.Id}}' \
+            | tee "$GITHUB_WORKSPACE/docker-evidence/image-id.txt"
+
+      - name: Run container
+        run: |
+          docker run -d --name sidecar-ci -p 8000:8000 -e APP_MODE=mock dsh-job-copilot-sidecar:ci
+
+      - name: Probe /health from inside the container
+        run: |
+          set -e
+          ok=0
+          for i in $(seq 1 30); do
+            if docker exec sidecar-ci python -c "import urllib.request;urllib.request.urlopen('http://localhost:8000/health')" >/dev/null 2>&1; then
+              echo "health endpoint ready after ${i}s"
+              ok=1
+              break
+            fi
+            sleep 1
+          done
+          test "$ok" = "1"
+
+          if docker exec sidecar-ci sh -c 'command -v curl >/dev/null 2>&1'; then
+            echo "curl" | tee "$GITHUB_WORKSPACE/docker-evidence/health-transport.txt"
+            docker exec sidecar-ci curl -sS http://localhost:8000/health \
+              | tee "$GITHUB_WORKSPACE/docker-evidence/health.json"
+          else
+            # 镜像基于 slim 时可能没有 curl；此时用容器内 python 取同一路径，并在证据里写明探活方式
+            echo "python-urllib（镜像内无 curl）" | tee "$GITHUB_WORKSPACE/docker-evidence/health-transport.txt"
+            docker exec sidecar-ci python -c 'import urllib.request,sys;sys.stdout.write(urllib.request.urlopen("http://localhost:8000/health").read().decode())' \
+              | tee "$GITHUB_WORKSPACE/docker-evidence/health.json"
+          fi
+
+          # 宿主侧取 HTTP 状态码，避免只看 stdout 判断不了码值
+          curl -sS -o /dev/null -w '%{http_code}' http://localhost:8000/health \
+            | tee "$GITHUB_WORKSPACE/docker-evidence/health-status.txt"
+          test "$(cat "$GITHUB_WORKSPACE/docker-evidence/health-status.txt")" = "200"
+
+      - name: Run package verify inside the container
+        run: |
+          # 把包挂进容器，在容器环境里跑 scripts/verify.sh：
+          # 证明的是"镜像里的运行时能满足包自检"，不是"本机能构建"。
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE":/pack \
+            -e APP_MODE=mock \
+            dsh-job-copilot-sidecar:ci \
+            bash /pack/scripts/verify.sh 2>&1 | tee "$GITHUB_WORKSPACE/docker-evidence/verify.log"
+
+      - name: Dump container logs
+        if: always()
+        run: |
+          mkdir -p docker-evidence
+          docker logs sidecar-ci > docker-evidence/container.log 2>&1 || true
+
+      - name: Upload evidence bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-evidence
+          path: docker-evidence/
+          if-no-files-found: warn
+
+      - name: Stop container
+        if: always()
+        run: docker rm -f sidecar-ci || true

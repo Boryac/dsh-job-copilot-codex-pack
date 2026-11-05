@@ -16,12 +16,22 @@ import urllib.request
 from ..config import Settings
 from ..errors import QUOTA_EXHAUSTED, UPSTREAM_ERROR, ToolError
 from ..mockdata import lookup_company, search_soft_profile
-from .quota import QuotaLedger
+from .quota import QuotaLedger, unit_cost_yuan
 
 TIANYANCHA_BASIC_APIS = [
     "tianyancha.company_base",
     "tianyancha.registration_info",
 ]
+DEEP_APIS = [
+    ("tianyancha.shareholder_penetration", 3),
+    ("tianyancha.actual_controller", 1),
+    ("tianyancha.judicial_risk", 2),
+]
+
+
+def _plan_cost(calls: int) -> float:
+    """按 TIANYANCHA_UNIT_COST_YUAN 估算本次花费；没配单价就是 0，报告里会写明单价未配置。"""
+    return round(calls * unit_cost_yuan(), 4)
 
 
 def _mock_quota_exhausted() -> bool:
@@ -53,9 +63,11 @@ class TianyanchaProvider:
                 fallback="search_only",
             )
         if self.settings.tianyancha_live:
+            # 先算钱再花钱：超上限直接抛 CostCapExceeded，不发这一次请求
+            ledger.ensure_budget(_plan_cost(len(TIANYANCHA_BASIC_APIS)))
             data = self._live_call("/company/basic", {"name": resolved_name})
             for api in TIANYANCHA_BASIC_APIS:
-                ledger.charge_tianyancha(api, calls=1, cost=0.0, mock=False)
+                ledger.charge_tianyancha(api, calls=1, cost=unit_cost_yuan(), mock=False)
             return data
         _maybe_delay(self.settings)
         item = lookup_company(resolved_name)
@@ -72,9 +84,10 @@ class TianyanchaProvider:
 
     def deep(self, resolved_name: str, ledger: QuotaLedger) -> dict:
         if self.settings.tianyancha_live:
+            ledger.ensure_budget(_plan_cost(sum(c for _, c in DEEP_APIS)))
             data = self._live_call("/company/deep", {"name": resolved_name})
-            ledger.charge_tianyancha("tianyancha.shareholder_penetration", calls=3, cost=0.0, mock=False)
-            ledger.charge_tianyancha("tianyancha.judicial_risk", calls=2, cost=0.0, mock=False)
+            for api, calls in DEEP_APIS:
+                ledger.charge_tianyancha(api, calls=calls, cost=_plan_cost(calls), mock=False)
             return data
         item = lookup_company(resolved_name)
         if not item or not item.get("deep_data"):

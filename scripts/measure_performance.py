@@ -261,11 +261,41 @@ def render_markdown(basic: dict, degradations: list[dict]) -> str:
     return "\n".join(lines)
 
 
+def preflight_live() -> tuple[bool, str]:
+    """live 重测的前置检查：缺什么就直说，不发一次请求、不伪造数字。"""
+    from app.config import LIVE, Settings
+
+    settings = Settings(
+        app_mode=LIVE,
+        llm_api_key=os.environ.get("LLM_API_KEY", ""),
+        llm_base_url=os.environ.get("LLM_BASE_URL", ""),
+        search_api_key=os.environ.get("SEARCH_API_KEY", ""),
+        tianyancha_mcp_url=os.environ.get("TIANYANCHA_MCP_URL", ""),
+        tianyancha_api_key=os.environ.get("TIANYANCHA_API_KEY", ""),
+    )
+    missing = [m for m in settings.degraded_modules()]
+    if missing:
+        return False, f"live 模式缺少 {missing} 的密钥/地址，未发起任何请求"
+    # 搜索契约未核验：SearchProvider._live_search 目前是显式抛错，塞 key 也跑不通
+    return False, (
+        "即使 key 齐全，live 搜索路径仍不可用：SearchProvider._live_search 主动抛 "
+        "UPSTREAM_ERROR（搜索 API 契约未核验）。真实搜索时延无法测，先定供应商再谈 live 数字。"
+    )
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--runs", type=int, default=20)
     ap.add_argument("--out", default=str(PACK / "docs" / "PERFORMANCE.md"))
+    ap.add_argument("--live", action="store_true", help="尝试真实链路重测（缺件会直接退出，不出数字）")
     args = ap.parse_args()
+
+    if args.live:
+        ok, reason = preflight_live()
+        print(f"== live 预检：{'通过' if ok else '未通过'}")
+        print(f"   {reason}")
+        print("== 结论：live 时延未实证（本次未产生任何耗时数字）")
+        return 2
 
     base = load_settings()
     print(f"跑 {args.runs} 次 basic 路径…")

@@ -18,7 +18,7 @@ from pathlib import Path
 from ..config import Settings
 from ..errors import PARSE_FAILED, ToolError
 from ..mockdata import MOCK_SCHEME  # noqa: F401  (保持 mock 语义常量在同处定义)
-from ..schemas import ResumeStructured
+from ..schemas import SCHEMA_VERSION, ResumeStructured
 from .text_extract import ExtractionResult, extract_text
 
 SECTION_KEYWORDS = {
@@ -56,6 +56,43 @@ def _is_section_header(line: str) -> str | None:
 
 def _clean(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip(" -–—•·*|\t")
+
+
+def _as_bullets(value) -> list[str]:
+    """上游描述字段既可能是多行字符串，也可能是数组，统一成 bullet 列表。
+
+    上游回填的 jobDescription 会把「时间 + 公司 + 岗位」这一头行也带进来，
+    头行不是成果描述，必须剔掉，否则报告会把它当证据引用。
+    """
+    if isinstance(value, str):
+        parts = [ln.strip() for ln in value.splitlines() if ln.strip()]
+    elif isinstance(value, (list, tuple)):
+        parts = [str(v).strip() for v in value if str(v).strip()]
+    else:
+        return []
+    out: list[str] = []
+    for idx, part in enumerate(parts):
+        marker = re.match(r"^[-•·*]\s*", part)
+        if marker:
+            out.append(part[marker.end():].strip())
+        elif idx == 0:
+            continue  # 头行（时间 + 公司 + 岗位）
+        else:
+            out.append(part)
+    return out
+
+
+def _period_str(value) -> str | None:
+    """上游时间字段是 {startDate, endDate}，契约要字符串，格式与 fallback 保持一致（`2025.07-2025.09`）。"""
+    if isinstance(value, str):
+        return value.strip() or None
+    if isinstance(value, dict):
+        start = str(value.get("startDate") or value.get("start") or "").strip()
+        end = str(value.get("endDate") or value.get("end") or "").strip()
+        if start and end:
+            return f"{start}-{end}"
+        return start or end or None
+    return None
 
 
 def _extract_metrics(bullets: list[str]) -> list[dict]:
@@ -268,13 +305,19 @@ class SmartResumeBackend:
 
     name = "smartresume"
 
-    # 上游 README / 08_ENVIRONMENT 第 5 节给出的最低要求。本机不满足，因此真实解析**未实测**，
-    # 只按契约写了字段映射；这一条在 v2 Phase 0 必须复核（见 docs/ENV_FEASIBILITY.md）。
+    # 2026-11-05 在本机实测过（RTX 3060 6GB / 15.4GB RAM，Qwen3-0.6B 本地权重）：
+    # CPU 单份约 86–98 秒、峰值内存约 3.1–3.2GB；模型哈希已与 ModelScope 逐文件核对。
+    # 证据见 docs/proof/smartresume-cpu.json 与 docs/PROOF.md。
     HARDWARE_MIN = {
         "ram_gb": 8,
         "disk_gb": 10,
-        "gpu": "非必需但强烈建议（CUDA）；OCR + 本地 LLM 推理在无 GPU 时耗时不可接受",
-        "verified": False,
+        "gpu": "非必需但强烈建议（CUDA）；CPU 可跑但单份 90 秒量级，会超出 30 秒解析预算",
+        "verified": True,
+        "measured": {
+            "cpu_seconds_per_resume": "86–98",
+            "peak_rss_mb": "3121–3237",
+            "model": "Qwen3-0.6B（1.19GB safetensors）",
+        },
     }
 
     def __init__(self, settings: Settings):
@@ -307,51 +350,94 @@ class SmartResumeBackend:
             )
         return self._normalize(raw)
 
-    def _normalize(self, raw: dict) -> dict:
-        """把上游字段映射到 03 契约。字段名是**按契约推测的映射**，未实测（见 FORK_LOCK 1.1）。"""
-        work = raw.get("work_experience") or raw.get("experiences") or []
+    @staticmethod
+    def _normalize(raw: dict) -> dict:
+        """把上游字段映射到 03 契约。
+
+        映射依据是 **2026-11-05 本机实跑抓到的真实返回**（见 docs/proof/smartresume-cpu.json）：
+        上游用驼峰命名 `basicInfo / workExperience / education`，时间字段是
+        `employmentPeriod{startDate,endDate}`，经历描述放在 `jobDescription`
+        （由上游按 `jobDescription_refer_index_range` 从文本行回填）。
+        旧版按 snake_case 猜的映射全部落空，导致 experiences 为空、且校验不过而静默降级为 fallback。
+        """
+        basic = raw.get("basicInfo") or raw.get("basic_info") or {}
+        work = raw.get("workExperience") or raw.get("work_experience") or raw.get("experiences") or []
+        edu_raw = raw.get("education") or []
+
         experiences = []
         for idx, item in enumerate(work, start=1):
-            bullets = item.get("bullets") or item.get("description") or []
-            if isinstance(bullets, str):
-                bullets = [bullets]
+            bullets = _as_bullets(item.get("jobDescription") or item.get("description") or item.get("bullets"))
             experiences.append(
                 {
                     "id": f"exp_{idx:02d}",
-                    "company": item.get("company") or item.get("company_name"),
-                    "role": item.get("role") or item.get("position") or item.get("title"),
-                    "period": item.get("period") or item.get("duration"),
-                    "bullets": [str(b) for b in bullets],
-                    "metrics": item.get("metrics") or _extract_metrics([str(b) for b in bullets]),
+                    "company": item.get("companyName") or item.get("company") or item.get("company_name"),
+                    "role": item.get("position") or item.get("role") or item.get("title"),
+                    "period": _period_str(
+                        item.get("employmentPeriod") or item.get("period") or item.get("duration")
+                    ),
+                    "bullets": bullets,
+                    "metrics": _extract_metrics(bullets),
                 }
             )
+
+        education = []
+        for item in edu_raw:
+            education.append(
+                {
+                    "school": item.get("school"),
+                    "major": item.get("major"),
+                    "degree": item.get("degreeLevel") or item.get("degree"),
+                    "period": _period_str(item.get("period")),
+                }
+            )
+
         projects = []
         for idx, item in enumerate(raw.get("projects") or [], start=1):
-            bullets = item.get("bullets") or item.get("description") or []
-            if isinstance(bullets, str):
-                bullets = [bullets]
+            bullets = _as_bullets(item.get("bullets") or item.get("description"))
             projects.append(
                 {
                     "id": f"proj_{idx:02d}",
                     "name": item.get("name") or item.get("title"),
-                    "bullets": [str(b) for b in bullets],
-                    "metrics": item.get("metrics") or _extract_metrics([str(b) for b in bullets]),
+                    "bullets": bullets,
+                    "metrics": _extract_metrics(bullets),
                 }
             )
+
+        notes = ["SmartResume 后端解析（本地权重，未走外部 API）"]
+        notes.append("上游 0.1.1 只提供 basic_info / education / work_experience 三类抽取 prompt，projects 与 skills 不产出")
+        if not any(e["bullets"] for e in experiences):
+            notes.append("上游未返回 jobDescription（文本输入只有整段、没有可回填的行号索引），经历 bullet 为空")
+
         return {
-            "schema_version": "1.0",
+            "schema_version": SCHEMA_VERSION,
             "parsing_mode": "smartresume",
-            "basic_info": raw.get("basic_info") or {"name": None, "title": None, "location": None, "links": []},
-            "education": raw.get("education") or [],
+            "basic_info": {
+                "name": basic.get("name"),
+                "title": basic.get("title") or raw.get("title"),
+                "location": basic.get("currentLocation") or basic.get("location"),
+                "links": list(basic.get("links") or []),
+            },
+            "education": education,
             "experiences": experiences,
             "projects": projects,
-            "skills": raw.get("skills") or [],
-            "parsing_notes": ["SmartResume 后端解析；字段映射按契约实现，真实效果未实测（见 docs/FORK_LOCK.md）"],
+            "skills": list(raw.get("skills") or []),
+            "parsing_notes": notes,
             "data_mode": "live",
         }
 
 
 EXTRACT_TYPES_DEFAULT = ["basic_info", "education", "work_experience", "projects", "skills"]
+
+
+def _is_empty_structure(data: dict) -> bool:
+    """上游"跑完了但什么都没抽到"的空壳：姓名/教育/经历全空。
+
+    这种情况必须当失败处理。真实踩到过：GPU 上缺 accelerate 导致模型没加载，
+    上游返回空 dict，映射后仍然是一个合法的 `parsing_mode=smartresume` 空结构，
+    报告会把"没读出来"当成"读出来了但是没有内容"。
+    """
+    basic = data.get("basic_info") or {}
+    return not (basic.get("name") or data.get("education") or data.get("experiences"))
 
 
 def parse_resume(
@@ -367,9 +453,13 @@ def parse_resume(
     fallback = FallbackResumeParser()
 
     data: dict | None = None
+    smartresume_empty = False
     if backend.available():
         try:
             data = backend.parse(path, resume_id or path.stem, extract_types or EXTRACT_TYPES_DEFAULT)
+            if data and _is_empty_structure(data) and extraction.text.strip():
+                data = None
+                smartresume_empty = True
         except Exception:  # 上游任何异常都不许冒泡成 500
             data = None
 
@@ -393,6 +483,10 @@ def parse_resume(
                 data["data_mode"] = "live"
         # 把"为什么没走 SmartResume"写进解析说明：用户看到的是 fallback 结果，
         # 但报告里必须能解释这不是模型解析，避免把规则解析说成模型能力。
+        if smartresume_empty:
+            data.setdefault("parsing_notes", []).append(
+                "SmartResume 返回空结构（模型未加载或抽取失败），已降级为 fallback 解析"
+            )
         reason = backend.unavailable_reason()
         if reason:
             data.setdefault("parsing_notes", []).append(reason)

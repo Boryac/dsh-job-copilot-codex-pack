@@ -16,7 +16,7 @@ echo "== pack: $PACK_DIR"
 mkdir -p "$PACK_POSIX/.tmp"
 
 # 1. 必备文件齐全
-for f in 00_START_HERE.md AGENTS.md README.md 01_PRD.md 02_ARCHITECTURE.md 03_DATA_CONTRACTS.md 04_REPORT_SPEC.md 05_COMPANY_RECON_SPEC.md 06_EVIDENCE_QUALITY.md 07_TASK_PLAN.md 08_ENVIRONMENT.md 09_TESTING_ACCEPTANCE.md 10_AGENT_WORKFLOW.md 11_RISKS_GUARDRAILS.md 12_FORK_MAP.md PROGRESS.md docs/FORK_LOCK.md docs/PERFORMANCE.md docs/REVIEW_T3.4.md docs/ACCEPTANCE_REPORT.md docs/ENV_FEASIBILITY.md docs/HUMAN_REVIEW_PACK.md docs/review-pack/golden_06_bd_strong.md docs/review-pack/golden_07_gap.md templates/report-template.md templates/golden/golden_01_bd.json templates/golden/golden_05_ka.json templates/golden/golden_06_bd_strong.json templates/golden/golden_07_gap.json templates/samples/jd-bd-campus.txt templates/samples/jd-backend.txt scripts/check_docker_assets.py scripts/export_review_pack.py starter/sidecar/app/version.py starter/sidecar/tests/test_cache_versioning.py starter/sidecar/tests/test_regression_harness.py templates/golden-case-template.json templates/company-disambiguation-template.json starter/dsh-plugin/src/tools.ts starter/dsh-plugin/src/skill/job-fit-orchestrator.md starter/dsh-plugin/package.json starter/sidecar/app/main.py starter/sidecar/app/validator.py starter/sidecar/requirements.txt starter/sidecar/Dockerfile starter/docker-compose.yml starter/.env.example; do
+for f in 00_START_HERE.md AGENTS.md README.md 01_PRD.md 02_ARCHITECTURE.md 03_DATA_CONTRACTS.md 04_REPORT_SPEC.md 05_COMPANY_RECON_SPEC.md 06_EVIDENCE_QUALITY.md 07_TASK_PLAN.md 08_ENVIRONMENT.md 09_TESTING_ACCEPTANCE.md 10_AGENT_WORKFLOW.md 11_RISKS_GUARDRAILS.md 12_FORK_MAP.md PROGRESS.md docs/FORK_LOCK.md docs/PROOF.md docs/PERFORMANCE.md docs/REVIEW_T3.4.md docs/ACCEPTANCE_REPORT.md docs/ENV_FEASIBILITY.md docs/HUMAN_REVIEW_PACK.md docs/review-pack/golden_06_bd_strong.md docs/review-pack/golden_07_gap.md docs/proof/model-manifest.json docs/proof/smartresume-cpu.json docs/proof/tianyancha-live.json docs/proof/tyc-mock-isolation.json docs/proof/docker-static.json docs/proof/live-perf-preflight.log templates/report-template.md templates/golden/golden_01_bd.json templates/golden/golden_05_ka.json templates/golden/golden_06_bd_strong.json templates/golden/golden_07_gap.json templates/samples/jd-bd-campus.txt templates/samples/jd-backend.txt scripts/check_docker_assets.py scripts/check_ci_evidence.py scripts/check_proof.py scripts/export_review_pack.py scripts/proof_smartresume.py scripts/proof_tianyancha.py scripts/fetch_smartresume_model.py scripts/make_sample_pdfs.py .github/workflows/docker-build.yml starter/sidecar/app/version.py starter/sidecar/tests/test_cache_versioning.py starter/sidecar/tests/test_regression_harness.py starter/sidecar/tests/test_cost_cap.py templates/golden-case-template.json templates/company-disambiguation-template.json starter/dsh-plugin/src/tools.ts starter/dsh-plugin/src/skill/job-fit-orchestrator.md starter/dsh-plugin/package.json starter/sidecar/app/main.py starter/sidecar/app/validator.py starter/sidecar/requirements.txt starter/sidecar/Dockerfile starter/docker-compose.yml starter/.env.example; do
   test -f "$PACK_DIR/$f" || { echo "MISSING: $f"; exit 1; }
 done
 echo "== files ok"
@@ -47,6 +47,9 @@ echo "== review pack ok（人工判定位仍为空白）"
 # 3.8 缓存版本号可查（旧缓存靠它失效）
 python3 -c "import sys; sys.path.insert(0, sys.argv[1]); from app.version import cache_version; print('== cache version:', cache_version())" \
   "$PACK_DIR/starter/sidecar"
+
+# 3.9 外部依赖实证守门：证据缺件 / 状态词含糊 / 未实证却说已完成，一律失败
+python3 "$PACK_DIR/scripts/check_proof.py"
 
 # 4. 测试套件：依赖装了就必须绿；没装就明说跳过，不假装通过
 if python3 -c "import pytest" >/dev/null 2>&1; then

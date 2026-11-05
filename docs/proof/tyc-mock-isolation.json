@@ -1,0 +1,27 @@
+{
+  "generated_at": "2026-11-05T12:58:54+0800",
+  "company": "上海携程商务有限公司",
+  "key_present": false,
+  "key_fingerprint": "<empty>",
+  "mcp_url_present": false,
+  "cap_yuan": 5.0,
+  "unit_cost_yuan": 0.0,
+  "steps": [
+    {
+      "step": "mock 缓存落盘",
+      "ok": true,
+      "detail": {
+        "cache_files": [
+          "e8642a739665e60515cddd39469b9ec4b414e5e295f4fc3636bde9e40e86acc3.json"
+        ],
+        "sources": [
+          "mock://tianyancha/basic"
+        ],
+        "data_mode": "mock",
+        "quota_calls": 2
+      }
+    }
+  ],
+  "status": "dry_run_mock_only",
+  "note": "只跑了 Mock 隔离段；live 段未执行（dry-run）。"
+}

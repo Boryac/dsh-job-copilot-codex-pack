@@ -68,6 +68,12 @@
 - 2026-11-05 | 报告在无强项时写「最大亮点：无直接量化证据支撑的强项」，自相矛盾 | 文案改为「无明显亮点（仅门槛类条件满足，需面试验证）」，并同步测试守卫 | 复核包要给人读，自相矛盾的句子会被当成系统在敷衍 | Lane D；`matching.py`、`test_matching.py` |
 - 2026-11-05 | 本包此前不是 git 仓库，无法给出基线 commit | 补 `.gitignore`（排除 `.env`/`.cache`/`.tmp`/`node_modules`/`dist`/`.workbuddy`）后 `git init` + 首个提交 | 进 v2 需要一个可回滚的基线；118 个文件入库，已确认无缓存、无 `.env`、无 `node_modules` | 全 Lane；基线见文末快照 |
 - 2026-11-05 | 真人复核包容易被 AI 顺手"代填"成已审 | 只导出材料 + 空白清单，并在 `verify.sh` 加守门：缺"AI 没有、也不能代替真人"声明即失败 | 缺口 1 的本质是"AI 不能自证人工评审"，守门把这条约束写进自动化，而不是靠自觉 | Lane E；`scripts/export_review_pack.py`、`verify.sh` 3.7 |
+- 2026-11-05 | 本机无 docker、仓库无 remote，Docker 怎么才能算"已证" | 写 CI 工作流 + `scripts/check_ci_evidence.py`（五件套机械校验），`check_docker_assets.py --ci-evidence` 通过才允许 `status=built`；当前仍写未实证 | 「静态校验通过」和「镜像可构建」是两件事；先把判据钉死，将来拿到 artifact 就不用靠人嘴确认。宁可留一个未实证，也不写"应该能构建" | Lane B/E；PROOF 第 1 节 |
+- 2026-11-05 | 实跑发现 `_normalize()` 按 snake_case 猜字段，上游实际是 `basicInfo`/`workExperience`/`employmentPeriod` | 按真实返回重写映射（含头行剔除、period 拼装），并加 2 条用真实结构做样本的测试 | 猜错的后果不是报错，而是 `experiences` 恒空 + 校验失败后**静默退回 fallback**，报告上看不出模型没跑成——这比崩掉更难发现 | Lane B；`parsers/resume.py`、`test_resume_parser.py` |
+- 2026-11-05 | GPU 上缺 `accelerate` 导致模型未加载，上游返回空 dict，却被记成 `parsing_mode=smartresume` | 加 `_is_empty_structure()` 守卫：空壳且原文有文本 → 降级 fallback 并写 note；实证脚本同时要求「经历数>0 且召回>0」才算跑通 | "没抽到东西"和"抽到了但内容为空"在结构上一模一样，不加守卫就会把失败当成功记账 | Lane B/E；6 行守卫 + 2 条测试 |
+- 2026-11-05 | 记账明细里 cost 全是 0.0，等于没有费用闸门 | `QuotaLedger.ensure_budget()` 在调用前校验 `TIANYANCHA_COST_CAP_YUAN`（默认 5 元），超限抛 `CostCapExceeded`；单价由 `TIANYANCHA_UNIT_COST_YUAN` 提供，不硬编码 | live 调用是真花钱，闸门必须在**发请求前**；单价不写死是避免替供应商承诺价格 | Lane C；`recon/quota.py`、`recon/providers.py`、`tests/test_cost_cap.py` 5 条 |
+- 2026-11-05 | PERFORMANCE.md 的「P90 9ms 远低于 120s 上限」读起来像通过结论 | 标题与结论改成「Mock 编排耗时，不构成 live 结论」，并新增一节写明 live 测不了的两个原因（缺 key + 搜索契约未实现） | 9ms 是 Mock 没有网络与推理的结果，拿它当 live 结论属于用便宜的证据回答贵的问题 | Lane E；`docs/PERFORMANCE.md`、`scripts/measure_performance.py --live` 预检 |
+- 2026-11-05 | 口头"某某已验证"没有约束力 | `docs/PROOF.md` + `scripts/check_proof.py` 做机械守门：证据文件必须存在且非空、未实证不许出现"已完成/已构建"、真人复核无签字件不许写已证 | 状态词靠自觉就会漂移；写进 verify 后，虚报会让自检直接失败 | Lane E；`verify.sh` 3.9 |
 
 ## Blockers（现象 | 复现步骤 | 已试方案 | 影响范围 | 状态）
 
@@ -93,14 +99,29 @@
 - 管理层级假阳性：「搭建并管理 10 人团队」曾把实习生的「搭建留存看板」判成 strong → 加 `leadership_level_mismatch()` 守卫，档位最高 discussable（3 条测试）。
 - 报告自相矛盾：无强项时写「最大亮点：无直接量化证据支撑的强项」→ 改为「无明显亮点（仅门槛类条件满足）」（1 条测试守卫）。
 
-## v2 Phase 0 待验证项（进 v2 前必须做完，做完才可改状态）
+## 外部依赖实证结果（2026-11-05，逐项只认「命令 + 原始产物 + 结论加局限」）
 
-| # | 项 | 验收口径 | 负责 |
-|---|---|---|---|
-| V1 | 真人复核（对应缺口 1） | 1-2 位招聘/业务同事按 `docs/HUMAN_REVIEW_PACK.md` 回填两份复核表，通过率 ≥70%，无证据造假；回填后更新本文件与 `docs/REVIEW_T3.4.md` | Lane E |
-| V2 | live 性能（对应缺口 2） | 接真实 key 后 `python scripts/measure_performance.py --runs 20` 重测，覆盖 `docs/PERFORMANCE.md`；P90 仍须 ≤120s | Lane A/B |
-| V3 | SmartResume 本地模型（对应缺口 3） | 满足 ≥8GB 内存/≥10GB 存储/可选 CUDA 的机器上跑 5 份脱敏简历，记录字段准确率并复核 `_normalize()` 映射；不达标就关掉该路径 | Lane B |
-| V4 | Docker 构建（对应缺口 4） | `docker build` 成功 + 容器内 `/health` 200 + 容器内 Mock demo 产出报告；把 `check_docker_assets.py` 的 `status` 从 `static_only` 改为 `built` | Lane B |
+完整证据链见 `docs/PROOF.md`；本表只记处置结果，状态词只有「已证 / 未实证」两种。
+
+| # | 项 | 状态 | 证据 | 缺什么 |
+|---|---|---|---|---|
+| P1 | Docker 镜像构建与容器运行 | **未实证** | `docs/proof/docker-static.json`（25 项静态全过，`status=static_only`）、`.github/workflows/docker-build.yml`、`scripts/check_ci_evidence.py` | 本机无任何容器运行时（docker/podman/nerdctl 均无，`wsl.exe` 被策略禁用）；仓库无 git remote，CI 一次未跑 |
+| P2 | SmartResume 本地模型解析 | **已证** | `docs/proof/model-manifest.json`（9/9 哈希一致）、`docs/proof/smartresume-cpu.json`、`docs/proof/smartresume-gpu.json` | 仅 3 份合成简历的文本型 PDF；上游只支持 3 类抽取；召回与 fallback 打平 |
+| P3 | 天眼查真实调用（basic 1 家 + deep 1 家） | **未实证** | `docs/proof/tianyancha-live.json`（`status=not_run`）、`docs/proof/tyc-mock-isolation.json`（Mock 缓存隔离已跑通） | 无 `TIANYANCHA_API_KEY`/`TIANYANCHA_MCP_URL`；接口路径与计费单价均未与官方核对 |
+| P4 | live 真实性能（真实搜索 + 真实 LLM 的 P50/P90） | **未实证** | `docs/proof/live-perf-preflight.log`（退出码 2）、`docs/PERFORMANCE.md`（已撤回 9ms 的 live 暗示） | 缺 LLM/搜索密钥；且 `SearchProvider._live_search` 主动抛错，塞 key 也跑不通 |
+| P5 | 真人复核（17 题） | **未实证** | `docs/HUMAN_REVIEW_PACK.md`（含签收表）、两份空白复核包 | 无 `docs/review-pack/signed-*.md` 签字件；AI 不代评 |
+
+原「v2 Phase 0 待验证项」的 V1–V4 已全部并入本表：P2 结案（已证），P1/P3/P4/P5 仍挂未实证并写明缺件。
+
+### P2 的实测数字（结论里不好看但必须写）
+
+| 设备 | 单份耗时 | 平均 | 峰值 RSS | 关键实体召回 | fallback 召回 |
+|---|---|---|---|---|---|
+| CPU（torch 2.15.0+cpu） | 98.07 / 85.67 / 93.25 s | 92.33 s | 3121–3237 MB | 1.0 / 0.9167 / 1.0 | 1.0 / 1.0 / 1.0 |
+| GPU（3060 6GB，fp16） | 39.54 / 27.44 / 27.33 s | 31.44 s | 2079–2688 MB | 1.0 / 0.9167 / 1.0 | 1.0 / 1.0 / 1.0 |
+
+结论：**本地模型可跑但不设为默认路径**——召回与 fallback 打平（唯一差异是漏 1 条指标），耗时高 3–4 个数量级，
+且解析预算仅 30 秒，CPU 必然超时、GPU 首份也超时。`HARDWARE_MIN.verified` 已改 `True` 并带实测区间。
 
 ## v1 基线快照（进 v2 前以此为基准）
 

@@ -1,0 +1,936 @@
+{
+  "generated_at": "2026-11-05T12:42:20+0800",
+  "env": {
+    "python": "3.13.14",
+    "torch": "2.15.0+cpu",
+    "cuda_available": false,
+    "device": "cpu",
+    "max_tokens": 1024,
+    "extract_types": [
+      "basic_info",
+      "education",
+      "work_experience"
+    ],
+    "model_dir": "C:\\Users\\22334\\Desktop\\dsh-job-copilot-codex-pack\\.tmp\\models\\llm\\Qwen3-0.6B",
+    "cpu": [
+      16
+    ],
+    "ram_gb": 15.4
+  },
+  "model": {
+    "dir": "C:\\Users\\22334\\Desktop\\dsh-job-copilot-codex-pack\\.tmp\\models\\llm\\Qwen3-0.6B",
+    "safetensors_bytes": 1192135096
+  },
+  "upstream_config": {
+    "model": {
+      "name": "qwen3-0.6b-local",
+      "api_url": "http://127.0.0.1:9/v1",
+      "api_key": "not-used-direct-model",
+      "max_tokens": 1024,
+      "temperature": 0.0,
+      "top_p": 1.0,
+      "seed": 0
+    },
+    "use_direct_models": true,
+    "direct_model_name": "C:\\Users\\22334\\Desktop\\dsh-job-copilot-codex-pack\\.tmp\\models\\llm\\Qwen3-0.6B",
+    "processing": {
+      "use_pdf_raw_text": true,
+      "page_limit": 10,
+      "use_force_json": false
+    },
+    "ocr": {
+      "enabled": false,
+      "use_cuda": false
+    },
+    "layout_detection": {
+      "enabled": false
+    },
+    "model_download": {
+      "source": "modelscope",
+      "models_dir": {
+        "llm": "C:\\Users\\22334\\Desktop\\dsh-job-copilot-codex-pack\\.tmp\\models\\llm",
+        "layout": ""
+      }
+    }
+  },
+  "records": [
+    {
+      "resume": "resume-bd.pdf",
+      "resume_id": "resume-bd",
+      "smartresume": {
+        "parsing_mode": "smartresume",
+        "seconds": 98.07,
+        "peak_rss_mb": 3121.4,
+        "rss_after_mb": 2304.5,
+        "error": "",
+        "error_detail": "",
+        "score": {
+          "must_contain_total": 8,
+          "must_contain_hit": [
+            "林舟",
+            "福州外语外贸学院",
+            "人工智能",
+            "云途旅行",
+            "山海文旅",
+            "商务拓展实习生",
+            "市场运营实习生",
+            "2025.07"
+          ],
+          "must_contain_miss": [],
+          "anchors_total": 5,
+          "anchors_hit": [
+            "18%",
+            "21%",
+            "260 条",
+            "1.2 万人次",
+            "8000 人"
+          ],
+          "anchors_miss": [],
+          "recall": 1.0,
+          "experiences": 2,
+          "projects": 0,
+          "skills": 0,
+          "bullets": 6,
+          "metrics": 11
+        },
+        "notes": [
+          "SmartResume 后端解析（本地权重，未走外部 API）",
+          "上游 0.1.1 只提供 basic_info / education / work_experience 三类抽取 prompt，projects 与 skills 不产出"
+        ]
+      },
+      "fallback": {
+        "parsing_mode": "fallback",
+        "seconds": 0.01,
+        "valid_comparison": true,
+        "score": {
+          "must_contain_total": 8,
+          "must_contain_hit": [
+            "林舟",
+            "福州外语外贸学院",
+            "人工智能",
+            "云途旅行",
+            "山海文旅",
+            "商务拓展实习生",
+            "市场运营实习生",
+            "2025.07"
+          ],
+          "must_contain_miss": [],
+          "anchors_total": 5,
+          "anchors_hit": [
+            "18%",
+            "21%",
+            "260 条",
+            "1.2 万人次",
+            "8000 人"
+          ],
+          "anchors_miss": [],
+          "recall": 1.0,
+          "experiences": 2,
+          "projects": 1,
+          "skills": 5,
+          "bullets": 6,
+          "metrics": 11
+        }
+      },
+      "output": {
+        "schema_version": "1.0",
+        "parsing_mode": "smartresume",
+        "basic_info": {
+          "name": "林舟",
+          "title": null,
+          "location": "福州",
+          "links": []
+        },
+        "education": [
+          {
+            "school": "福州外语外贸学院",
+            "major": "人工智能",
+            "degree": "本科",
+            "period": "2023.09-2027.06"
+          }
+        ],
+        "experiences": [
+          {
+            "id": "exp_01",
+            "company": "云途旅行(OTA)",
+            "role": "商务拓展实习生",
+            "period": "2025.07-2025.09",
+            "bullets": [
+              "负责华东区 32 家酒店供应商的签约与上线,季度 GMV 提升 18%",
+              "搭建商家分层运营 SOP,商家复购率从 21% 提升到 29%",
+              "独立完成 12 场线下路演,新增有效线索 260 条"
+            ],
+            "metrics": [
+              {
+                "value": "32家",
+                "context": "负责华东区 32 家酒店供应商的签约与上线,季度 GMV 提升 18%"
+              },
+              {
+                "value": "18%",
+                "context": "负责华东区 32 家酒店供应商的签约与上线,季度 GMV 提升 18%"
+              },
+              {
+                "value": "21%",
+                "context": "搭建商家分层运营 SOP,商家复购率从 21% 提升到 29%"
+              },
+              {
+                "value": "29%",
+                "context": "搭建商家分层运营 SOP,商家复购率从 21% 提升到 29%"
+              },
+              {
+                "value": "12场",
+                "context": "独立完成 12 场线下路演,新增有效线索 260 条"
+              },
+              {
+                "value": "260条",
+                "context": "独立完成 12 场线下路演,新增有效线索 260 条"
+              }
+            ]
+          },
+          {
+            "id": "exp_02",
+            "company": "山海文旅",
+            "role": "市场运营实习生",
+            "period": "2024.12-2025.03",
+            "bullets": [
+              "策划非遗主题线路 6 条,单月引流 1.2 万人次",
+              "运营公众号与小红书账号,3 个月累计涨粉 8000 人",
+              "协同设计团队产出 20 组宣传素材,投放 ROI 提升 0.4"
+            ],
+            "metrics": [
+              {
+                "value": "6条",
+                "context": "策划非遗主题线路 6 条,单月引流 1.2 万人次"
+              },
+              {
+                "value": "1.2万",
+                "context": "策划非遗主题线路 6 条,单月引流 1.2 万人次"
+              },
+              {
+                "value": "3个",
+                "context": "运营公众号与小红书账号,3 个月累计涨粉 8000 人"
+              },
+              {
+                "value": "8000人",
+                "context": "运营公众号与小红书账号,3 个月累计涨粉 8000 人"
+              },
+              {
+                "value": "20组",
+                "context": "协同设计团队产出 20 组宣传素材,投放 ROI 提升 0.4"
+              }
+            ]
+          }
+        ],
+        "projects": [],
+        "skills": [],
+        "parsing_notes": [
+          "SmartResume 后端解析（本地权重，未走外部 API）",
+          "上游 0.1.1 只提供 basic_info / education / work_experience 三类抽取 prompt，projects 与 skills 不产出"
+        ],
+        "data_mode": "live"
+      },
+      "output_fallback": {
+        "schema_version": "1.0",
+        "parsing_mode": "fallback",
+        "basic_info": {
+          "name": "林舟",
+          "title": "商务拓展 / BD",
+          "location": "福州",
+          "links": []
+        },
+        "education": [
+          {
+            "school": "福州外语外贸学院",
+            "major": "人工智能",
+            "degree": "本科",
+            "period": "2023.09-2027.06"
+          }
+        ],
+        "experiences": [
+          {
+            "id": "exp_01",
+            "company": "云途旅行（OTA）",
+            "role": "商务拓展实习生",
+            "period": "2025.07-2025.09",
+            "bullets": [
+              "负责华东区 32 家酒店供应商的签约与上线，季度 GMV 提升 18%",
+              "搭建商家分层运营 SOP，商家复购率从 21% 提升到 29%",
+              "独立完成 12 场线下路演，新增有效线索 260 条"
+            ],
+            "metrics": [
+              {
+                "value": "32家",
+                "context": "负责华东区 32 家酒店供应商的签约与上线，季度 GMV 提升 18%"
+              },
+              {
+                "value": "18%",
+                "context": "负责华东区 32 家酒店供应商的签约与上线，季度 GMV 提升 18%"
+              },
+              {
+                "value": "21%",
+                "context": "搭建商家分层运营 SOP，商家复购率从 21% 提升到 29%"
+              },
+              {
+                "value": "29%",
+                "context": "搭建商家分层运营 SOP，商家复购率从 21% 提升到 29%"
+              },
+              {
+                "value": "12场",
+                "context": "独立完成 12 场线下路演，新增有效线索 260 条"
+              },
+              {
+                "value": "260条",
+                "context": "独立完成 12 场线下路演，新增有效线索 260 条"
+              }
+            ]
+          },
+          {
+            "id": "exp_02",
+            "company": "山海文旅",
+            "role": "市场运营实习生",
+            "period": "2024.12-2025.03",
+            "bullets": [
+              "策划非遗主题线路 6 条，单月引流 1.2 万人次",
+              "运营公众号与小红书账号，3 个月累计涨粉 8000 人",
+              "协同设计团队产出 20 组宣传素材，投放 ROI 提升 0.4"
+            ],
+            "metrics": [
+              {
+                "value": "6条",
+                "context": "策划非遗主题线路 6 条，单月引流 1.2 万人次"
+              },
+              {
+                "value": "1.2万",
+                "context": "策划非遗主题线路 6 条，单月引流 1.2 万人次"
+              },
+              {
+                "value": "3个",
+                "context": "运营公众号与小红书账号，3 个月累计涨粉 8000 人"
+              },
+              {
+                "value": "8000人",
+                "context": "运营公众号与小红书账号，3 个月累计涨粉 8000 人"
+              },
+              {
+                "value": "20组",
+                "context": "协同设计团队产出 20 组宣传素材，投放 ROI 提升 0.4"
+              }
+            ]
+          }
+        ],
+        "projects": [
+          {
+            "id": "proj_01",
+            "name": "智能问答客服系统",
+            "bullets": [
+              "用 LangChain 搭建 RAG 问答链路，人工转接率下降 35%",
+              "整理 1200 条历史工单做意图分类，准确率达到 88%"
+            ],
+            "metrics": [
+              {
+                "value": "35%",
+                "context": "用 LangChain 搭建 RAG 问答链路，人工转接率下降 35%"
+              },
+              {
+                "value": "1200条",
+                "context": "整理 1200 条历史工单做意图分类，准确率达到 88%"
+              },
+              {
+                "value": "88%",
+                "context": "整理 1200 条历史工单做意图分类，准确率达到 88%"
+              }
+            ]
+          }
+        ],
+        "skills": [
+          "Excel 数据透视与函数建模",
+          "SQL 基础查询",
+          "PPT 方案撰写",
+          "英语六级",
+          "粤语"
+        ],
+        "parsing_notes": [
+          "已识别到联系方式，按隐私规范仅用于解析判断，不写入结构化结果",
+          "已识别到联系方式，按隐私规范仅用于解析判断，不写入结构化结果"
+        ],
+        "data_mode": "mock"
+      }
+    },
+    {
+      "resume": "resume-da.pdf",
+      "resume_id": "resume-da",
+      "smartresume": {
+        "parsing_mode": "smartresume",
+        "seconds": 85.67,
+        "peak_rss_mb": 3218.6,
+        "rss_after_mb": 2218.6,
+        "error": "",
+        "error_detail": "",
+        "score": {
+          "must_contain_total": 8,
+          "must_contain_hit": [
+            "沈砚",
+            "浙江某财经大学",
+            "统计学",
+            "星图数据",
+            "某电商平台",
+            "数据分析实习生",
+            "运营实习生",
+            "2025.06"
+          ],
+          "must_contain_miss": [],
+          "anchors_total": 4,
+          "anchors_hit": [
+            "40 张报表",
+            "22%",
+            "92%"
+          ],
+          "anchors_miss": [
+            "0.82"
+          ],
+          "recall": 0.9167,
+          "experiences": 2,
+          "projects": 0,
+          "skills": 0,
+          "bullets": 5,
+          "metrics": 9
+        },
+        "notes": [
+          "SmartResume 后端解析（本地权重，未走外部 API）",
+          "上游 0.1.1 只提供 basic_info / education / work_experience 三类抽取 prompt，projects 与 skills 不产出"
+        ]
+      },
+      "fallback": {
+        "parsing_mode": "fallback",
+        "seconds": 0.01,
+        "valid_comparison": true,
+        "score": {
+          "must_contain_total": 8,
+          "must_contain_hit": [
+            "沈砚",
+            "浙江某财经大学",
+            "统计学",
+            "星图数据",
+            "某电商平台",
+            "数据分析实习生",
+            "运营实习生",
+            "2025.06"
+          ],
+          "must_contain_miss": [],
+          "anchors_total": 4,
+          "anchors_hit": [
+            "40 张报表",
+            "22%",
+            "0.82",
+            "92%"
+          ],
+          "anchors_miss": [],
+          "recall": 1.0,
+          "experiences": 2,
+          "projects": 1,
+          "skills": 7,
+          "bullets": 5,
+          "metrics": 9
+        }
+      },
+      "output": {
+        "schema_version": "1.0",
+        "parsing_mode": "smartresume",
+        "basic_info": {
+          "name": "沈砚",
+          "title": null,
+          "location": "杭州",
+          "links": []
+        },
+        "education": [
+          {
+            "school": "浙江某财经大学",
+            "major": "统计学",
+            "degree": "本科",
+            "period": "2022.09-2026.06"
+          }
+        ],
+        "experiences": [
+          {
+            "id": "exp_01",
+            "company": "星图数据",
+            "role": "数据分析实习生",
+            "period": "2025.06-2025.12",
+            "bullets": [
+              "搭建用户留存看板,覆盖 6 个业务线共 40 张报表",
+              "用 SQL 完成 300 万行订单数据清洗,异常订单识别率提升 22%",
+              "输出月度经营分析报告 6 份,支撑 2 次定价调整"
+            ],
+            "metrics": [
+              {
+                "value": "6个",
+                "context": "搭建用户留存看板,覆盖 6 个业务线共 40 张报表"
+              },
+              {
+                "value": "40张",
+                "context": "搭建用户留存看板,覆盖 6 个业务线共 40 张报表"
+              },
+              {
+                "value": "300万",
+                "context": "用 SQL 完成 300 万行订单数据清洗,异常订单识别率提升 22%"
+              },
+              {
+                "value": "22%",
+                "context": "用 SQL 完成 300 万行订单数据清洗,异常订单识别率提升 22%"
+              },
+              {
+                "value": "6份",
+                "context": "输出月度经营分析报告 6 份,支撑 2 次定价调整"
+              },
+              {
+                "value": "2次",
+                "context": "输出月度经营分析报告 6 份,支撑 2 次定价调整"
+              }
+            ]
+          },
+          {
+            "id": "exp_02",
+            "company": "某电商平台",
+            "role": "运营实习生",
+            "period": "2024.07-2024.09",
+            "bullets": [
+              "负责类目活动报名,累计提报 180 个 SKU",
+              "整理竞品价格监测表,价格覆盖率从 60% 提升到 92%"
+            ],
+            "metrics": [
+              {
+                "value": "180个",
+                "context": "负责类目活动报名,累计提报 180 个 SKU"
+              },
+              {
+                "value": "60%",
+                "context": "整理竞品价格监测表,价格覆盖率从 60% 提升到 92%"
+              },
+              {
+                "value": "92%",
+                "context": "整理竞品价格监测表,价格覆盖率从 60% 提升到 92%"
+              }
+            ]
+          }
+        ],
+        "projects": [],
+        "skills": [],
+        "parsing_notes": [
+          "SmartResume 后端解析（本地权重，未走外部 API）",
+          "上游 0.1.1 只提供 basic_info / education / work_experience 三类抽取 prompt，projects 与 skills 不产出"
+        ],
+        "data_mode": "live"
+      },
+      "output_fallback": {
+        "schema_version": "1.0",
+        "parsing_mode": "fallback",
+        "basic_info": {
+          "name": "沈砚",
+          "title": "数据分析师",
+          "location": "杭州",
+          "links": []
+        },
+        "education": [
+          {
+            "school": "浙江某财经大学",
+            "major": "统计学",
+            "degree": "本科",
+            "period": "2022.09-2026.06"
+          }
+        ],
+        "experiences": [
+          {
+            "id": "exp_01",
+            "company": "星图数据",
+            "role": "数据分析实习生",
+            "period": "2025.06-2025.12",
+            "bullets": [
+              "搭建用户留存看板，覆盖 6 个业务线共 40 张报表",
+              "用 SQL 完成 300 万行订单数据清洗，异常订单识别率提升 22%",
+              "输出月度经营分析报告 6 份，支撑 2 次定价调整"
+            ],
+            "metrics": [
+              {
+                "value": "6个",
+                "context": "搭建用户留存看板，覆盖 6 个业务线共 40 张报表"
+              },
+              {
+                "value": "40张",
+                "context": "搭建用户留存看板，覆盖 6 个业务线共 40 张报表"
+              },
+              {
+                "value": "300万",
+                "context": "用 SQL 完成 300 万行订单数据清洗，异常订单识别率提升 22%"
+              },
+              {
+                "value": "22%",
+                "context": "用 SQL 完成 300 万行订单数据清洗，异常订单识别率提升 22%"
+              },
+              {
+                "value": "6份",
+                "context": "输出月度经营分析报告 6 份，支撑 2 次定价调整"
+              },
+              {
+                "value": "2次",
+                "context": "输出月度经营分析报告 6 份，支撑 2 次定价调整"
+              }
+            ]
+          },
+          {
+            "id": "exp_02",
+            "company": "某电商平台",
+            "role": "运营实习生",
+            "period": "2024.07-2024.09",
+            "bullets": [
+              "负责类目活动报名，累计提报 180 个 SKU",
+              "整理竞品价格监测表，价格覆盖率从 60% 提升到 92%"
+            ],
+            "metrics": [
+              {
+                "value": "180个",
+                "context": "负责类目活动报名，累计提报 180 个 SKU"
+              },
+              {
+                "value": "60%",
+                "context": "整理竞品价格监测表，价格覆盖率从 60% 提升到 92%"
+              },
+              {
+                "value": "92%",
+                "context": "整理竞品价格监测表，价格覆盖率从 60% 提升到 92%"
+              }
+            ]
+          }
+        ],
+        "projects": [
+          {
+            "id": "proj_01",
+            "name": "用户流失预测模型",
+            "bullets": [
+              "用 XGBoost 建模，AUC 达到 0.82",
+              "输出流失归因清单，被业务方采纳 5 条"
+            ],
+            "metrics": [
+              {
+                "value": "5条",
+                "context": "输出流失归因清单，被业务方采纳 5 条"
+              }
+            ]
+          }
+        ],
+        "skills": [
+          "Python（pandas",
+          "sklearn）",
+          "SQL",
+          "Tableau",
+          "Excel",
+          "统计建",
+          "模"
+        ],
+        "parsing_notes": [
+          "已识别到联系方式，按隐私规范仅用于解析判断，不写入结构化结果",
+          "已识别到联系方式，按隐私规范仅用于解析判断，不写入结构化结果"
+        ],
+        "data_mode": "mock"
+      }
+    },
+    {
+      "resume": "resume-pm.pdf",
+      "resume_id": "resume-pm",
+      "smartresume": {
+        "parsing_mode": "smartresume",
+        "seconds": 93.25,
+        "peak_rss_mb": 3237.2,
+        "rss_after_mb": 2317.5,
+        "error": "",
+        "error_detail": "",
+        "score": {
+          "must_contain_total": 8,
+          "must_contain_hit": [
+            "顾清和",
+            "华东某高校",
+            "信息管理与信息系统",
+            "某 SaaS 公司",
+            "校园创业团队",
+            "产品实习生",
+            "产品运营",
+            "2025.08"
+          ],
+          "must_contain_miss": [],
+          "anchors_total": 4,
+          "anchors_hit": [
+            "18 份需求文档",
+            "26 小时",
+            "3000 人",
+            "19%"
+          ],
+          "anchors_miss": [],
+          "recall": 1.0,
+          "experiences": 2,
+          "projects": 0,
+          "skills": 0,
+          "bullets": 5,
+          "metrics": 10
+        },
+        "notes": [
+          "SmartResume 后端解析（本地权重，未走外部 API）",
+          "上游 0.1.1 只提供 basic_info / education / work_experience 三类抽取 prompt，projects 与 skills 不产出"
+        ]
+      },
+      "fallback": {
+        "parsing_mode": "fallback",
+        "seconds": 0.007,
+        "valid_comparison": true,
+        "score": {
+          "must_contain_total": 8,
+          "must_contain_hit": [
+            "顾清和",
+            "华东某高校",
+            "信息管理与信息系统",
+            "某 SaaS 公司",
+            "校园创业团队",
+            "产品实习生",
+            "产品运营",
+            "2025.08"
+          ],
+          "must_contain_miss": [],
+          "anchors_total": 4,
+          "anchors_hit": [
+            "18 份需求文档",
+            "26 小时",
+            "3000 人",
+            "19%"
+          ],
+          "anchors_miss": [],
+          "recall": 1.0,
+          "experiences": 2,
+          "projects": 1,
+          "skills": 5,
+          "bullets": 5,
+          "metrics": 10
+        }
+      },
+      "output": {
+        "schema_version": "1.0",
+        "parsing_mode": "smartresume",
+        "basic_info": {
+          "name": "顾清和",
+          "title": null,
+          "location": "上海",
+          "links": []
+        },
+        "education": [
+          {
+            "school": "华东某高校",
+            "major": "信息管理与信息系统",
+            "degree": "本科",
+            "period": "2023.09-2027.06"
+          }
+        ],
+        "experiences": [
+          {
+            "id": "exp_01",
+            "company": "某 SaaS 公司",
+            "role": "产品实习生",
+            "period": "2025.08-2025.11",
+            "bullets": [
+              "负责客服工单模块的需求梳理,产出 18 份需求文档",
+              "推动 3 个版本迭代上线,工单平均处理时长从 26 小时降到 15 小时",
+              "组织 8 场用户访谈,沉淀 40 条需求池条目"
+            ],
+            "metrics": [
+              {
+                "value": "18份",
+                "context": "负责客服工单模块的需求梳理,产出 18 份需求文档"
+              },
+              {
+                "value": "3个",
+                "context": "推动 3 个版本迭代上线,工单平均处理时长从 26 小时降到 15 小时"
+              },
+              {
+                "value": "26小时",
+                "context": "推动 3 个版本迭代上线,工单平均处理时长从 26 小时降到 15 小时"
+              },
+              {
+                "value": "15小时",
+                "context": "推动 3 个版本迭代上线,工单平均处理时长从 26 小时降到 15 小时"
+              },
+              {
+                "value": "8场",
+                "context": "组织 8 场用户访谈,沉淀 40 条需求池条目"
+              },
+              {
+                "value": "40条",
+                "context": "组织 8 场用户访谈,沉淀 40 条需求池条目"
+              }
+            ]
+          },
+          {
+            "id": "exp_02",
+            "company": "校园创业团队",
+            "role": "产品运营",
+            "period": "2025.01-2025.04",
+            "bullets": [
+              "从 0 到 1 搭建校园二手交易小程序,累计注册 3000 人",
+              "设计拉新活动 4 轮,次周留存从 12% 提升到 19%"
+            ],
+            "metrics": [
+              {
+                "value": "3000人",
+                "context": "从 0 到 1 搭建校园二手交易小程序,累计注册 3000 人"
+              },
+              {
+                "value": "4轮",
+                "context": "设计拉新活动 4 轮,次周留存从 12% 提升到 19%"
+              },
+              {
+                "value": "12%",
+                "context": "设计拉新活动 4 轮,次周留存从 12% 提升到 19%"
+              },
+              {
+                "value": "19%",
+                "context": "设计拉新活动 4 轮,次周留存从 12% 提升到 19%"
+              }
+            ]
+          }
+        ],
+        "projects": [],
+        "skills": [],
+        "parsing_notes": [
+          "SmartResume 后端解析（本地权重，未走外部 API）",
+          "上游 0.1.1 只提供 basic_info / education / work_experience 三类抽取 prompt，projects 与 skills 不产出"
+        ],
+        "data_mode": "live"
+      },
+      "output_fallback": {
+        "schema_version": "1.0",
+        "parsing_mode": "fallback",
+        "basic_info": {
+          "name": "顾清和",
+          "title": "AI 产品经理（校招）",
+          "location": "上海",
+          "links": []
+        },
+        "education": [
+          {
+            "school": "华东某高校",
+            "major": "信息管理与信息系统",
+            "degree": "本科",
+            "period": "2023.09-2027.06"
+          }
+        ],
+        "experiences": [
+          {
+            "id": "exp_01",
+            "company": "某 SaaS 公司",
+            "role": "产品实习生",
+            "period": "2025.08-2025.11",
+            "bullets": [
+              "负责客服工单模块的需求梳理，产出 18 份需求文档",
+              "推动 3 个版本迭代上线，工单平均处理时长从 26 小时降到 15 小时",
+              "组织 8 场用户访谈，沉淀 40 条需求池条目"
+            ],
+            "metrics": [
+              {
+                "value": "18份",
+                "context": "负责客服工单模块的需求梳理，产出 18 份需求文档"
+              },
+              {
+                "value": "3个",
+                "context": "推动 3 个版本迭代上线，工单平均处理时长从 26 小时降到 15 小时"
+              },
+              {
+                "value": "26小时",
+                "context": "推动 3 个版本迭代上线，工单平均处理时长从 26 小时降到 15 小时"
+              },
+              {
+                "value": "15小时",
+                "context": "推动 3 个版本迭代上线，工单平均处理时长从 26 小时降到 15 小时"
+              },
+              {
+                "value": "8场",
+                "context": "组织 8 场用户访谈，沉淀 40 条需求池条目"
+              },
+              {
+                "value": "40条",
+                "context": "组织 8 场用户访谈，沉淀 40 条需求池条目"
+              }
+            ]
+          },
+          {
+            "id": "exp_02",
+            "company": "校园创业团队",
+            "role": "产品运营",
+            "period": "2025.01-2025.04",
+            "bullets": [
+              "从 0 到 1 搭建校园二手交易小程序，累计注册 3000 人",
+              "设计拉新活动 4 轮，次周留存从 12% 提升到 19%"
+            ],
+            "metrics": [
+              {
+                "value": "3000人",
+                "context": "从 0 到 1 搭建校园二手交易小程序，累计注册 3000 人"
+              },
+              {
+                "value": "4轮",
+                "context": "设计拉新活动 4 轮，次周留存从 12% 提升到 19%"
+              },
+              {
+                "value": "12%",
+                "context": "设计拉新活动 4 轮，次周留存从 12% 提升到 19%"
+              },
+              {
+                "value": "19%",
+                "context": "设计拉新活动 4 轮，次周留存从 12% 提升到 19%"
+              }
+            ]
+          }
+        ],
+        "projects": [
+          {
+            "id": "proj_01",
+            "name": "简历优化助手",
+            "bullets": [
+              "用大模型 API 做 JD 关键词匹配，生成 3 版改写建议",
+              "邀请 30 位同学试用，满意度评分 4.2 分（5 分制）"
+            ],
+            "metrics": [
+              {
+                "value": "3版",
+                "context": "用大模型 API 做 JD 关键词匹配，生成 3 版改写建议"
+              },
+              {
+                "value": "30位",
+                "context": "邀请 30 位同学试用，满意度评分 4.2 分（5 分制）"
+              },
+              {
+                "value": "4.2分",
+                "context": "邀请 30 位同学试用，满意度评分 4.2 分（5 分制）"
+              },
+              {
+                "value": "5分",
+                "context": "邀请 30 位同学试用，满意度评分 4.2 分（5 分制）"
+              }
+            ]
+          }
+        ],
+        "skills": [
+          "Axure",
+          "Figma",
+          "SQL 基础",
+          "Prompt 设计",
+          "英语六级"
+        ],
+        "parsing_notes": [
+          "已识别到联系方式，按隐私规范仅用于解析判断，不写入结构化结果",
+          "已识别到联系方式，按隐私规范仅用于解析判断，不写入结构化结果"
+        ],
+        "data_mode": "mock"
+      }
+    }
+  ],
+  "mode_counts": {
+    "smartresume": 3
+  },
+  "avg_smartresume_seconds": 92.33,
+  "max_peak_rss_mb": 3237.2
+}

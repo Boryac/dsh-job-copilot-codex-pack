@@ -72,3 +72,28 @@ python3 scripts/export_review_pack.py --case golden_06_bd_strong --case golden_0
 # 想额外复核常见档位（discussable）时：
 python3 scripts/export_review_pack.py --case golden_01_bd
 ```
+
+## 签收与存档（未签字 = 未实证）
+
+本包当前状态：**空白，未复核**。在下面签字之前，`docs/PROOF.md` 的「真人复核」一项固定写「未实证」，
+任何人不得因为题库"看起来合理"就把它改成已证。
+
+**复核人签署**
+
+| 项 | 填写 |
+|---|---|
+| 复核人姓名 |  |
+| 岗位 / 与招聘的关系 |  |
+| 复核日期 |  |
+| 通过题数 / 总题数（17） |  |
+| 通过率（要求 ≥70%） |  |
+| 是否发现证据造假（有/无） |  |
+| 是否认可两组档位（strong / gap） |  |
+| 签字（手写或电子签） |  |
+
+**存档规则（给后续维护者）**
+
+1. 签字后的表格另存为 `docs/review-pack/signed-YYYYMMDD-<复核人>.md`，**保持原样**，不做摘要、不改措辞；
+2. 在 `PROGRESS.md` 的记录里只登记三件事：文件路径、sha256、签字日期；
+3. 若复核结论与 AI 自评不一致，**以签字件为准**，并在 `docs/REVIEW_T3.4.md` 里写清分歧点；
+4. 没有签字件时，`scripts/check_proof.py` 会把「真人复核」判为未实证——这是刻意的机器守门，不要绕。
