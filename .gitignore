@@ -3,6 +3,8 @@
 .env.*
 .tmp/
 *.log
+# 例外：docs/proof 下的日志是实证证据，必须入库（否则别人拉下来守门就失败）
+!docs/proof/*.log
 
 # Python
 __pycache__/
