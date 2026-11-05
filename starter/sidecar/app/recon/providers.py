@@ -165,11 +165,11 @@ class SearchProvider:
         return data
 
     def _live_search(self, query: str) -> list[dict]:
-        # 搜索 API 的请求/响应契约未核验（T1.1 只锁定了仓库，不含搜索服务）。
-        # 按 00 的原则选更保守的做法：显式失败并降级，而不是拼一个猜的接口假装成功。
+        # 搜索 API 的请求/响应契约未核验（未锁定任何搜索服务商）。
+        # 选更保守的做法：显式失败并降级，而不是拼一个猜的接口假装成功。
         raise ToolError(
             code=UPSTREAM_ERROR,
-            message="搜索 API 契约未核验（见 docs/FORK_LOCK.md），live 搜索路径未启用，已降级为'软信息未获取'。",
+            message="搜索 API 契约未核验，live 搜索路径未启用，已降级为'软信息未获取'。",
             retryable=False,
             fallback="soft_profile_unavailable",
         )

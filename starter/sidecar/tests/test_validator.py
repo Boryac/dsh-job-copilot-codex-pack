@@ -1,4 +1,4 @@
-"""证据校验器测试（T3.1）：06 第 2 节每条规则一个正例 + 一个反例。"""
+"""证据校验器测试：每条规则一个正例 + 一个反例。"""
 from __future__ import annotations
 
 import copy

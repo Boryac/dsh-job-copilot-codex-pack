@@ -1,6 +1,6 @@
 # sidecar 运行时依赖（Python 3.11+）
 # 只列 MVP 必需的包；重型依赖（本地 LLM、OCR、模型权重）不进这里，
-# 见 08_ENVIRONMENT.md 第 5 节：跑不起来时按 fallback 解析继续，不阻塞主链路。
+# 见 docs/ENVIRONMENT.md 第 5 节：跑不起来时按 fallback 解析继续，不阻塞主链路。
 fastapi>=0.110
 uvicorn[standard]>=0.29
 pydantic>=2.6

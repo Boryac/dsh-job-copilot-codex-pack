@@ -1,4 +1,4 @@
-"""Sidecar HTTP API（Lane B）：DSH 插件只做声明与转发，重活都在这里。
+"""Sidecar HTTP API：DSH 插件只做声明与转发，重活都在这里。
 
 端点：
   GET  /health                      健康检查 + 当前模式 + 降级模块

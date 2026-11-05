@@ -1,4 +1,4 @@
-"""公司背调测试（T2.1 / T4.1）：消歧、缓存、额度记账、deep 零调用与幂等。"""
+"""公司背调测试：消歧、缓存、额度记账、deep 零调用与幂等。"""
 from __future__ import annotations
 
 import pytest

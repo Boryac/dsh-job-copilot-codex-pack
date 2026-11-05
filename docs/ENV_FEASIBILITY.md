@@ -1,16 +1,20 @@
 # 环境可行性结论（Docker / SmartResume）
 
 > 本文件只写**已核实**的部分。没有执行过的动作不写"已完成"，未实测的能力不写"已验证"。
-> 2026-11-05 外部依赖实证阶段更新：SmartResume 已真跑（CPU + GPU），Docker 仍无运行时、CI 未触发。
-> 逐项证据与命令见 `docs/PROOF.md`，本文件只做环境角度的归纳。
+> 2026-11-05 外部依赖实证阶段更新：SmartResume 已真跑（CPU + GPU）。
+> 2026-11-05 晚间更新：仓库已推送到 GitHub，CI 工作流真实跑过一次（run 41997650783）。
+> 镜像构建、容器运行、/health 探活均已证（证据包已下载并过机械复核）；容器内包自检因挂载目录
+> 权限未执行，该项仍未证。逐项证据见 `docs/proof/` 与 CI artifact `docker-evidence`，
+> 复跑命令见 `scripts/` 下各脚本，本文件只做环境角度的归纳。
 
 ## 1. 结论先行
 
 | 项 | 本轮状态 | 证据 | 结论 |
 |---|---|---|---|
 | SmartResume 本地模型 | **已证（CPU + GPU）** | `docs/proof/model-manifest.json`（9/9 哈希一致）、`docs/proof/smartresume-cpu.json`、`docs/proof/smartresume-gpu.json` | 能跑通且 3/3 非空壳；但召回与 fallback 打平、耗时 27–98 秒，**不设为默认路径** |
-| Dockerfile / compose / CI 工作流 | 已静态校验（25 项） | `python3 scripts/check_docker_assets.py` → `status=static_only`、`static_ok=true` | 资产无已知缺陷；**构建仍无运行时证据** |
-| Docker 镜像构建与容器运行 | **未实证** | 本机无 `docker`/`podman`/`nerdctl`，`C:\Program Files\Docker` 不存在，`wsl.exe` 被安全策略禁用；仓库无 git remote → CI 未触发 | 需要一台有容器的机器，或配 remote 推一次触发 `docker-build` |
+| Dockerfile / compose / CI 工作流 | 已静态校验（25 项） | `python3 scripts/check_docker_assets.py` → `status=static_only`、`static_ok=true` | 资产无已知缺陷 |
+| Docker 镜像构建与容器运行 | **已证（CI）** | CI run `41997650783`（push 触发，success）：`build.log`（真实 BuildKit 构建）、`image-id.txt`（`sha256:1114bea4…`）、`container.log`（uvicorn 启动）、`health-status.txt`（200）、`health.json`（可解析响应体）；本机无 `docker` 运行时 | 镜像可构建、容器可运行、/health 返回 200，五项证据经 `scripts/check_ci_evidence.py` 复核 E1–E6 全过 |
+| 容器内包自检 | **未执行** | 同一证据包的 `verify.log` 仅 82 字节：`mkdir: cannot create directory '/pack/.tmp': Permission denied` | 挂载目录属 CI runner 用户，容器内非 root 用户无写权限，`verify.sh` 建 `.tmp` 即退出；机械复核 E7 失败，整体 `status=contradictory`。"镜像运行时满足包自检"仍未证 |
 | fallback 解析路径 | 已测 | `tests/test_resume_parser.py` 20 passed | v1 主链路，仍是默认路径 |
 
 机器实测环境：Windows 11 / Python 3.13.14 / 16 逻辑核 / 15.4GB RAM / **RTX 3060 Laptop 6GB（CUDA 13.4 驱动）** / 磁盘余量 80GB。
@@ -40,21 +44,34 @@ CI 证据包：未提供 —— 未实证
 - `scripts/check_ci_evidence.py`：把「三件套」落成机械判据（构建日志/镜像 ID/容器日志/health/verify），
   空文件判 `incomplete`、内容矛盾判 `contradictory`，只有全过才 `certified`，`check_docker_assets.py` 才会把 `status` 改成 `built`。
 
-### 2.2 未执行（不许写成"已构建"）
+### 2.1.1 CI 实测结果（2026-11-05，run 41997650783）
 
-- `docker build` / `docker run` / `docker compose up`
-- 容器内 `/health` 探活、容器内 Mock 演示与 `verify.sh`
-- CI 工作流本身**一次都没运行**（无 remote），因此没有任何 CI 日志
+仓库推送到 GitHub 后，`docker-build` 工作流由 push 触发真实跑完一次（conclusion: success）。证据包 `docker-evidence` 已下载，内容如下：
 
-任何文档/汇报里出现"镜像已构建""容器已验证"都属于虚报。
+- `build.log`：真实 BuildKit 构建输出，含 `naming to docker.io/library/dsh-job-copilot-sidecar:ci`。
+- `image-id.txt`：`sha256:1114bea4f539ebbaccedd55d9fccf48c7d1c1cdaa08da44878381376676878dd`，与 build.log 末尾 manifest list 一致。
+- `container.log`：uvicorn 启动完成，3 次 `GET /health` 均 200。
+- `health-status.txt`：`200`（宿主侧取的状态码）。
+- `health.json`：`{"status":"ok","version":"1.0.0","mode":"mock","degraded_modules":[],"cache_days":7}`。
+- `health-transport.txt`：`python-urllib（镜像内无 curl）`，探活方式如实记录。
+- `verify.log`：仅 82 字节，内容为 `mkdir: cannot create directory '/pack/.tmp': Permission denied`。
+
+`python3 scripts/check_ci_evidence.py --dir <证据目录>` 复核：E1–E6 全过，E7（verify 以 `== verify passed` 收尾）失败，整体 `status: contradictory`。即：镜像构建、容器运行、探活已证；容器内自检未执行，未证。
+
+### 2.2 未执行（不许写成"已验证"）
+
+- 容器内 `verify.sh`：未真正执行。根因是 `-v "$GITHUB_WORKSPACE":/pack` 挂载的目录属 CI runner 用户，而镜像以非 root 用户运行（Dockerfile 的 D 组检查要求），容器内建不了 `/pack/.tmp`，脚本 `set -e` 直接退出。工作流这一步用了 `| tee` 管道且未加 `set -o pipefail`，退出码被 tee 吞掉，所以步骤显示 success 而自检一行未跑。修复方向：verify 步之前对 workspace 赋写权限（如 `chmod -R a+rwX "$GITHUB_WORKSPACE"`），或让 `verify.sh` 在包目录不可写时把临时目录改到容器内可写路径。
+- 本机 `docker build` / `docker run` / `docker compose up`：未执行，本机无 Docker 运行时。
+
+口径边界：可以说"CI 构建并运行过镜像、/health 200 已证"；不能说"容器内自检通过"或"镜像已验证满足包自检"，后者要等 E7 过。
 
 ### 2.3 拿到证据后怎么改口径
 
-1. 有 docker 的机器：`docker build -t x starter/sidecar` → `docker run` → `curl /health` → 容器内 `bash scripts/verify.sh`，日志落到 `docker-evidence/`；
-2. 或给仓库配 remote 推一次，从 Actions 下载 `docker-evidence` artifact；
+1. 按 2.2 的根因修掉挂载权限问题，推一次 main 触发 `docker-build`；
+2. 从 Actions 下载 `docker-evidence` artifact；
 3. `python3 scripts/check_ci_evidence.py --dir <证据目录>` 必须返回 `certified`，再用
    `python3 scripts/check_docker_assets.py --ci-evidence <证据目录>` 复核 `status=built`；
-4. 最后改 `docs/PROOF.md` 第 1 节的状态与「仍缺」列——不改这两处，`scripts/check_proof.py` 会在 verify 里报错。
+4. 最后改本文件第 1 节状态表与 2.2 的口径边界。E7 不过之前，容器内自检一律写未证。
 
 ## 3. SmartResume：实测数据与结论
 

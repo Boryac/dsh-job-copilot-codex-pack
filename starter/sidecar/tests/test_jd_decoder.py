@@ -1,4 +1,4 @@
-"""JD 拆解测试（T1.5 后端）：ID 唯一、可追溯、推断标注、URL 失败明确提示粘贴。"""
+"""JD 拆解测试：ID 唯一、可追溯、推断标注、URL 失败明确提示粘贴。"""
 from __future__ import annotations
 
 import pytest

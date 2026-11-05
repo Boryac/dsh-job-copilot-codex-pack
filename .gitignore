@@ -1,6 +1,8 @@
 # 运行时产物与本地环境，不进仓库
 .env
 .env.*
+# 例外：环境变量模板必须入库，否则新克隆跑不起 verify.sh
+!starter/.env.example
 .tmp/
 *.log
 # sidecar 运行时落盘的报告目录（示例报告见仓库根目录 reports/）

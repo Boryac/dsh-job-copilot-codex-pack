@@ -1,5 +1,5 @@
 /**
- * Sidecar HTTP 客户端（Lane A）：只做转发与错误映射，不在这里实现业务逻辑。
+ * Sidecar HTTP 客户端：只做转发与错误映射，不在这里实现业务逻辑。
  * 超时由 AbortController 控制；错误统一映射为 {code, message, retryable, fallback}。
  */
 import { ToolInvocationError } from "./sdk";

@@ -1,4 +1,4 @@
-"""匹配基线测试（T3.3）：门槛类要求按事实判定、四维档位、证据引用完整性。"""
+"""匹配基线测试：门槛类要求按事实判定、四维档位、证据引用完整性。"""
 from __future__ import annotations
 
 from app.orchestrator.matching import (

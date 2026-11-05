@@ -1,5 +1,5 @@
 /**
- * T2.4 的层内自检：DSH 内只放摘要卡片，完整报告是 Markdown 文件。
+ * 层内自检：DSH 内只放摘要卡片，完整报告是 Markdown 文件。
  * 卡片必须做到：档位可读、缺口与亮点不混淆、Mock/降级有明示、导出文件名可见。
  */
 import assert from "node:assert/strict";

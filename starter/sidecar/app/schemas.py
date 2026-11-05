@@ -1,4 +1,4 @@
-"""数据契约的 Pydantic 模型 —— 与 03_DATA_CONTRACTS.md 一一对应。
+"""数据契约的 Pydantic 模型，与插件层 TypeScript 类型（src/contracts.ts）一一对应。
 
 规则：
 - 字段名、枚举值、ID 格式必须与 03 一致；不一致 = bug，不是"文档滞后"。

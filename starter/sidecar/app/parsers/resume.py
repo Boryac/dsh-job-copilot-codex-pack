@@ -1,7 +1,7 @@
 """简历解析：SmartResume 适配器 + fallback 规则解析（08 第 5 节选项 1）。
 
 为什么 fallback 是默认路径：
-- SmartResume 真实后端要求 ≥8GB 内存 / ≥10GB 存储 / 可选 CUDA（T1.1 已核验 README），
+- SmartResume 真实后端要求 ≥8GB 内存 / ≥10GB 存储 / 可选 CUDA（已核验上游 README），
   MVP 不把 GPU 作硬依赖。
 - 两条路径的输出必须是同一个 Schema（03 第 3.1 节），切换只改 parsing_mode，不改报告结构。
 
@@ -307,7 +307,7 @@ class SmartResumeBackend:
 
     # 2026-11-05 在本机实测过（RTX 3060 6GB / 15.4GB RAM，Qwen3-0.6B 本地权重）：
     # CPU 单份约 86–98 秒、峰值内存约 3.1–3.2GB；模型哈希已与 ModelScope 逐文件核对。
-    # 证据见 docs/proof/smartresume-cpu.json 与 docs/PROOF.md。
+    # 证据见 docs/proof/smartresume-cpu.json 与 docs/ENV_FEASIBILITY.md 第 3 节。
     HARDWARE_MIN = {
         "ram_gb": 8,
         "disk_gb": 10,

@@ -1,5 +1,5 @@
 /**
- * 插件入口（Lane A）：注册三个工具 + 导出 skill 路径。
+ * 插件入口：注册三个工具 + 导出 skill 路径。
  * 真实 DSH 环境里，registry 由 SDK 提供；这里只依赖 register(def) 这一层语义。
  */
 import { buildSummaryCard, renderCardText } from "./cards/summary-card";

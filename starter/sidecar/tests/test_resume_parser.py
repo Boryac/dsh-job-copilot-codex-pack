@@ -1,4 +1,4 @@
-"""简历解析测试（T1.3）：契约字段、ID 连续性、PII 不落库、失败模式降级。"""
+"""简历解析测试：契约字段、ID 连续性、PII 不落库、失败模式降级。"""
 from __future__ import annotations
 
 import pytest

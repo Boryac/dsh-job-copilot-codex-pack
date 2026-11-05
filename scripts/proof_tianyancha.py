@@ -1,6 +1,6 @@
 """天眼查真实调用实证（basic 1 家 + deep 1 家，预估→确认→按明细记账）。
 
-只认三件套：可复现命令（本文件）、原始产物（docs/proof/tianyancha-live.json）、结论加局限（docs/PROOF.md）。
+只认三件套：可复现命令（本文件）、原始产物（docs/proof/tianyancha-live.json）、结论加局限（docs/ENV_FEASIBILITY.md）。
 
 纪律（写进代码，不靠自觉）：
 - key 只从 `starter/.env` 或进程环境读，**任何输出只出现它的 sha256 前 12 位**；

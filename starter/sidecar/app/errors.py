@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-# 错误码是契约的一部分，新增需要同步 02_ARCHITECTURE.md 第 6 节
+# 错误码是契约的一部分，新增错误码必须同步插件层与 sidecar 两侧的处理
 TIMEOUT = "TIMEOUT"
 PARSE_FAILED = "PARSE_FAILED"
 COMPANY_AMBIGUOUS = "COMPANY_AMBIGUOUS"

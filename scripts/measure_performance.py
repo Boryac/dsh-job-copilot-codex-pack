@@ -2,7 +2,7 @@
 
 只跑 Mock 链路，不调用任何外部付费接口。
 
-两点说明（写进 docs/PERFORMANCE.md）：
+两点说明（写进实测报告）：
 1. 耗时用真实墙钟测，N 次取 P50/P90，不"估算"；
 2. 降级用 `MOCK_FORCE_TIMEOUT` 注入预算耗尽，而不是干等 30 秒 —— 注入点就在
    `_run_with_budget` 里，走的是与真实超时完全相同的异常路径，不绕过降级逻辑。
@@ -226,7 +226,7 @@ def render_markdown(basic: dict, degradations: list[dict]) -> str:
         "",
         "分步 P50 / P90：",
         "",
-        "| 步骤 | P50 | P90 | 预算（02 第 4 节） |",
+        "| 步骤 | P50 | P90 | 工程预算 |",
         "|---|---|---|---|",
         f"| 简历结构化 | {basic['steps']['resume_structurer']['p50']:.1f} | {basic['steps']['resume_structurer']['p90']:.1f} | 30s |",
         f"| JD 拆解 | {basic['steps']['jd_decoder']['p50']:.1f} | {basic['steps']['jd_decoder']['p90']:.1f} | 20s |",
@@ -234,9 +234,9 @@ def render_markdown(basic: dict, degradations: list[dict]) -> str:
         f"| 四维匹配 | {basic['steps']['matching']['p50']:.1f} | {basic['steps']['matching']['p90']:.1f} | 计入端到端 |",
         f"| 内容生成 | {basic['steps']['generate']['p50']:.1f} | {basic['steps']['generate']['p90']:.1f} | 分段 |",
         "",
-        f"结论：端到端 P90 = {basic['wall']['p90']:.0f} ms，远低于 02 第 4 节要求的 120000 ms 上限。",
+        f"结论：端到端 P90 = {basic['wall']['p90']:.0f} ms，远低于 basic 路径 120000 ms 的工程预算上限。",
         "但必须说明：Mock 模式没有网络往返与 LLM 推理，这里的数字只证明**编排与校验本身不是瓶颈**，"
-        "不能当成 live 模式的耗时承诺。live 耗时需接入真实 key 后按同一脚本重测（见 PROGRESS 已知缺口）。",
+        "不能当成 live 模式的耗时承诺。live 耗时需接入真实 key 后按同一脚本重测。",
         "",
         "## 3. 降级行为实测",
         "",
@@ -286,7 +286,7 @@ def preflight_live() -> tuple[bool, str]:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--runs", type=int, default=20)
-    ap.add_argument("--out", default=str(PACK / "docs" / "PERFORMANCE.md"))
+    ap.add_argument("--out", default=str(PACK / ".tmp" / "performance.md"))
     ap.add_argument("--live", action="store_true", help="尝试真实链路重测（缺件会直接退出，不出数字）")
     args = ap.parse_args()
 

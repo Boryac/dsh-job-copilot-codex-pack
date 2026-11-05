@@ -1,11 +1,11 @@
 /**
- * DSH 工具声明层（Lane A）。
+ * DSH 工具声明层。
  *
  * 本文件实现的是本包约定的 DSH `defineTool` 表面契约：
  *   - 声明 parameters（含类型/必填/枚举）
  *   - 声明 timeoutMs
  *   - execute 返回 canonical 值
- * 08_ENVIRONMENT.md 第 1 节明确要求"不硬编码 SDK 内部 API"，因此这里只依赖这层语义。
+ * docs/ENVIRONMENT.md 第 1 节明确要求"不硬编码 SDK 内部 API"，因此这里只依赖这层语义。
  * 接入真实 SDK 时，只需把 defineTool 换成 SDK 的实现（或加一层适配），工具实现不用改。
  *
  * A1 的验证方式：tsc 类型检查 + tests/tools.test.ts 对参数校验、超时、错误映射做断言。

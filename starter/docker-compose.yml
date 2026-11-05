@@ -12,5 +12,5 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-# 注意：starter/sidecar/Dockerfile 由 Lane B 在 T1.2 时补齐（python:3.11-slim + requirements.txt + uvicorn）。
-# Mock 模式不需要 GPU；本地 SmartResume 模型部署见 08_ENVIRONMENT.md 第 5 节。
+# 注意：starter/sidecar/Dockerfile 基于 python:3.11-slim，先装依赖再拷代码，非 root 运行。
+# Mock 模式不需要 GPU；本地 SmartResume 模型部署见 docs/ENVIRONMENT.md 第 5 节。

@@ -1,4 +1,4 @@
-"""API 集成测试（T1.2 / A1）：健康检查、三个工具端点、端到端、错误契约。"""
+"""API 集成测试：健康检查、三个工具端点、端到端、错误契约。"""
 from __future__ import annotations
 
 import pytest

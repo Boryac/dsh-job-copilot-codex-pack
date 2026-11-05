@@ -1,9 +1,9 @@
 """SmartResume 真实后端实证：模型哈希已核对后，跑 3 份脱敏简历并与 fallback 对照。
 
 只认三件套：
-  1) 可复现命令（本文件 + docs/PROOF.md 里的调用行）
+  1) 可复现命令（本文件，调用行见 docs/ENV_FEASIBILITY.md 第 3 节）
   2) 原始产物（本脚本写出的 JSON：逐份结构化结果、耗时、内存峰值、哈希前置条件）
-  3) 结论 + 局限（docs/PROOF.md 的 SmartResume 段）
+  3) 结论 + 局限（docs/ENV_FEASIBILITY.md 第 3 节）
 
 运行前提：
   - 用装了 smartresume / torch / transformers 的解释器（.tmp/sr-venv）

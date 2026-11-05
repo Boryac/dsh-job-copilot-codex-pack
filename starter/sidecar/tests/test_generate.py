@@ -1,4 +1,4 @@
-"""生成测试（T3.2 / T3.5）：题目数量与证据、四类覆盖、锚点、知识点分级。"""
+"""生成测试：题目数量与证据、四类覆盖、锚点、知识点分级。"""
 from __future__ import annotations
 
 from app.orchestrator.generate import CATEGORY_ORDER, generate

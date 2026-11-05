@@ -1,4 +1,4 @@
-"""报告渲染测试（T2.3）：8 节齐全且顺序正确、分区正确、免责句在场、无 PII。"""
+"""报告渲染测试：8 节齐全且顺序正确、分区正确、免责句在场、无 PII。"""
 from __future__ import annotations
 
 import re
@@ -12,7 +12,7 @@ def test_all_sections_present_in_order(bd_analysis):
     assert all(pos >= 0 for pos in positions), [
         title for title, pos in zip(REQUIRED_SECTIONS, positions) if pos < 0
     ]
-    assert positions == sorted(positions), "8 节顺序必须与 04_REPORT_SPEC 一致"
+    assert positions == sorted(positions), "8 节顺序必须与报告规范一致"
     assert len(REQUIRED_SECTIONS) == 9  # 第 0 节 + 8 节
 
 

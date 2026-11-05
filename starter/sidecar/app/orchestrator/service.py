@@ -1,4 +1,4 @@
-"""编排层（Lane D，T2.2）：固定顺序、分段生成、超时降级、校验后输出。
+"""编排层：固定顺序、分段生成、超时降级、校验后输出。
 
 固定顺序（01 第 6 节）：
   resume-structurer ∥ jd-decoder ∥ company-recon(basic)

@@ -1,5 +1,5 @@
 /**
- * 03_DATA_CONTRACTS 的 TypeScript 侧类型与运行时校验（Lane A）。
+ * 数据契约的 TypeScript 侧类型与运行时校验，与 sidecar 的 Pydantic 模型一一对应。
  *
  * 为什么还要运行时校验：插件层是"转发 + 渲染"，如果 sidecar 升级后字段漂移，
  * 不做校验就会把坏数据渲染成卡片，用户看到的是错误结论而不是错误提示。
